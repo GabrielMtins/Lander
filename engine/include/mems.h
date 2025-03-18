@@ -18,6 +18,12 @@ void * Mems_Alloc(Mems *mems, size_t size);
 
 void Mems_Free(Mems *mems);
 
+void * Mems_GetTop(Mems *mems);
+
+size_t Mems_SaveState(Mems *mems);
+
+void Mems_RestoreState(Mems *mems, size_t old_state);
+
 const char * Mems_ReadFileAsString(Mems *mems, const char *filename);
 
 #endif

@@ -23,6 +23,18 @@ void Mems_Free(Mems *mems){
 	mems->top = 0;
 }
 
+void * Mems_GetTop(Mems *mems){
+	return (void *) (mems->block + mems->top);
+}
+
+size_t Mems_SaveState(Mems *mems){
+	return mems->top;
+}
+
+void Mems_RestoreState(Mems *mems, size_t old_state){
+	mems->top = old_state;
+}
+
 const char * Mems_ReadFileAsString(Mems *mems, const char *filename){
 	FILE *file = fopen(filename, "r");
 	char *str;
