@@ -20,7 +20,11 @@ typedef struct {
 	unsigned int num_indices;
 } Mesh;
 
+bool Vertex_CreateSimple(Vertex *vertex, float x, float y, float z, float u, float v);
+
 bool Mesh_Create(Mesh *mesh, const Vertex *vertices, size_t num_vertices, const unsigned int *indices, size_t num_indices);
+
+bool Mesh_BuildUnitTetrahedron(Mesh *mesh);
 
 bool Mesh_Render(Mesh *mesh, Shader *shader);
 

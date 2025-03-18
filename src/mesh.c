@@ -2,6 +2,19 @@
 
 #include <stddef.h>
 
+bool Vertex_CreateSimple(Vertex *vertex, float x, float y, float z, float u, float v){
+	if(vertex == NULL)
+		return false;
+
+	vertex->position = (Vec3) {x, y, z};
+	vertex->uv = (Vec2) {u, v};
+	vertex->normal = (Vec3) {0.0f, 0.0f, 0.0f};
+	vertex->color = (Vec3) {0.0f, 0.0f, 0.0f};
+	vertex->layer_index = 0.0f;
+
+	return true;
+}
+
 bool Mesh_Create(Mesh *mesh, const Vertex *vertices, size_t num_vertices, const unsigned int *indices, size_t num_indices){
 	mesh->num_indices = num_indices;
 
@@ -36,6 +49,29 @@ bool Mesh_Create(Mesh *mesh, const Vertex *vertices, size_t num_vertices, const 
 	glBindVertexArray(0);
 
 	return true;
+}
+
+bool Mesh_BuildUnitTetrahedron(Mesh *mesh){
+	Vertex vertices[4];
+
+	Vertex_CreateSimple(&vertices[0], +0.5f, +0.0f, -0.35f, 0.0f, 0.0f);
+	Vertex_CreateSimple(&vertices[1], -0.5f, +0.0f, -0.35f, 0.0f, 1.0f);
+	Vertex_CreateSimple(&vertices[2], +0.0f, +0.5f, +0.35f, 1.0f, 0.0f);
+	Vertex_CreateSimple(&vertices[3], +0.0f, -0.5f, +0.35f, 1.0f, 1.0f);
+
+	vertices[0].color = (Vec3) {1.0f, 0.0f, 0.0f};
+	vertices[1].color = (Vec3) {0.0f, 1.0f, 0.0f};
+	vertices[2].color = (Vec3) {0.0f, 0.0f, 1.0f};
+	vertices[3].color = (Vec3) {1.0f, 1.0f, 1.0f};
+
+	const unsigned int indices[] = {
+		0, 1, 2,
+		0, 1, 3,
+		1, 2, 3,
+		2, 0, 3
+	};
+
+	return Mesh_Create(mesh, vertices, 4, indices, 12);
 }
 
 bool Mesh_Render(Mesh *mesh, Shader *shader){

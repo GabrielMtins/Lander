@@ -51,12 +51,13 @@ typedef struct {
 	int *button_mapping;
 
 	Mems *memory;
+	Mems *stack;
 
 	const uint8_t *keyboard_state;
 	SDL_GameController *controller;
 } Context;
 
-Context *Context_Create(const char *title, int w, int h, Mems *memory);
+Context *Context_Create(const char *title, int w, int h, Mems *memory, Mems *stack);
 
 bool Context_OpenGameController(Context *context, int joystick_index);
 

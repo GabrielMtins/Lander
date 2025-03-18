@@ -17,6 +17,9 @@ void Mat4_Reset(Mat4 *result);
 void Mat4_Identity(Mat4 *result);
 void Mat4_Transform(Mat4 *result, float x, float y, float z);
 void Mat4_Scale(Mat4 *result, float x, float y, float z);
+void Mat4_RotateX(Mat4 *result, float angle);
+void Mat4_RotateY(Mat4 *result, float angle);
+void Mat4_RotateZ(Mat4 *result, float angle);
 void Mat4_PerspectiveProjection(Mat4 *result, float aspect_ratio, float fov, float far, float near);
 
 #endif

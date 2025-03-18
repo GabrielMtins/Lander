@@ -63,7 +63,53 @@ void Mat4_Scale(Mat4 *result, float x, float y, float z){
 	result->arr[15] = 1.0f;
 }
 
+void Mat4_RotateX(Mat4 *result, float angle){
+	Mat4_Reset(result);
+
+	float cos_angle = cosf(angle);
+	float sin_angle = sinf(angle);
+
+	result->arr[0] = 1.0f;
+	result->arr[15] = 1.0f;
+
+	result->arr[5] = cos_angle;
+	result->arr[6] = -sin_angle;
+	result->arr[9] = sin_angle;
+	result->arr[10] = cos_angle;
+}
+
+void Mat4_RotateY(Mat4 *result, float angle){
+	Mat4_Reset(result);
+
+	float cos_angle = cosf(angle);
+	float sin_angle = sinf(angle);
+
+	result->arr[0] = cos_angle;
+	result->arr[2] = sin_angle;
+	result->arr[5] = 1.0f;
+	result->arr[8] = -sin_angle;
+	result->arr[10] = cos_angle;
+
+	result->arr[15] = 1.0f;
+}
+
+void Mat4_RotateZ(Mat4 *result, float angle){
+	Mat4_Reset(result);
+
+	float cos_angle = cosf(angle);
+	float sin_angle = sinf(angle);
+
+	result->arr[0] = cos_angle;
+	result->arr[1] = -sin_angle;
+	result->arr[4] = sin_angle;
+	result->arr[5] = cos_angle;
+	result->arr[10] = 1.0f;
+	result->arr[15] = 1.0f;
+}
+
 void Mat4_PerspectiveProjection(Mat4 *result, float aspect_ratio, float fov, float far, float near){
+	Mat4_Reset(result);
+
 	float s = 1.0f / tanf(0.5f * fov);
 	float a1 = -(far + near)/ (far - near);
 	float a2 = - 2.0f * far * near / (far - near);

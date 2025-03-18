@@ -1,8 +1,9 @@
 #include "context.h"
+#include "g_def.h"
 
 static void Context_SetDefaultMapping(Context *context);
 
-Context *Context_Create(const char *title, int w, int h, Mems *memory){
+Context *Context_Create(const char *title, int w, int h, Mems *memory, Mems *stack){
 	printf("Hi\n");
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -42,6 +43,7 @@ Context *Context_Create(const char *title, int w, int h, Mems *memory){
 	SDL_RenderSetLogicalSize(context->renderer, w, h);
 
 	context->memory = memory;
+	context->stack = stack;
 
 	context->quit = false;
 	context->tick = 0;
@@ -63,7 +65,7 @@ Context *Context_Create(const char *title, int w, int h, Mems *memory){
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_ALWAYS);
+	glDepthFunc(GL_LESS);
 
 	return context;
 }

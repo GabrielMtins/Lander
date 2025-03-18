@@ -8,7 +8,7 @@ typedef struct {
 	unsigned int id;
 } Shader;
 
-bool Shader_LoadShader(Shader *shader, const char *vertex_src, const char *fragment_src);
+bool Shader_Load(Shader *shader, const char *vertex_src, const char *fragment_src);
 
 bool Shader_Use(Shader *shader);
 

@@ -2,7 +2,7 @@
 
 static int Shader_GetLocation(Shader *shader, const char *name);
 
-bool Shader_LoadShader(Shader *shader, const char *vertex_src, const char *fragment_src){
+bool Shader_Load(Shader *shader, const char *vertex_src, const char *fragment_src){
 	bool loaded = true;
 	unsigned int vertex_shader = 0, fragment_shader = 0;
 
@@ -62,6 +62,8 @@ bool Shader_LoadShader(Shader *shader, const char *vertex_src, const char *fragm
 
 bool Shader_Use(Shader *shader){
 	glUseProgram(shader->id);
+
+	return true;
 }
 
 bool Shader_SetUniform3f(Shader *shader, const char *name, float x, float y, float z){

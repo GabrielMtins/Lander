@@ -18,4 +18,6 @@ void * Mems_Alloc(Mems *mems, size_t size);
 
 void Mems_Free(Mems *mems);
 
+const char * Mems_ReadFileAsString(Mems *mems, const char *filename);
+
 #endif

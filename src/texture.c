@@ -46,7 +46,7 @@ static Shader default_texture_shader;
 static Mesh default_texture_mesh;
 
 bool Texture_LoadDefaults(void){
-	Shader_LoadShader(
+	Shader_Load(
 			&default_texture_shader,
 			default_texture_vertex_src,
 			default_texture_fragment_src

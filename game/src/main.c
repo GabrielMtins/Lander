@@ -13,14 +13,15 @@ int main(int argc, char **argv){
 	srand(time(NULL));
 	Context *context;
 	Game *game;
-	Mems memory;
+	Mems memory, stack;
 
 	(void) argc;
 	(void) argv;
 
 	memory = Mems_Create(malloc(MEMORY_USED), MEMORY_USED);
+	stack = Mems_Create(malloc(STACK_SIZE), STACK_SIZE);
 
-	context = Context_Create("hi", INTERNAL_WIDTH, INTERNAL_HEIGHT, &memory);
+	context = Context_Create("hi", INTERNAL_WIDTH, INTERNAL_HEIGHT, &memory, &stack);
 	game = Game_Create(context);
 
 	MegaTexture_Load(&game->resources->mega_textures[0], context, "tile.png");
