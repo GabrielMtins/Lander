@@ -11,10 +11,10 @@ bool Entity_Reset(Entity *ent){
 
 	ent->type = -1;
 
-	ent->position = (Vec2){0.0f, 0.0f};
-	ent->offset_sprite = (Vec2){0.0f, 0.0f};
-	ent->size     = (Vec2){0.0f, 0.0f};
-	ent->velocity = (Vec2){0.0f, 0.0f};
+	ent->position = (Vec3){0.0f, 0.0f, 0.0f};
+	ent->offset_sprite = (Vec3){0.0f, 0.0f, 0.0f};
+	ent->size     = (Vec3){0.0f, 0.0f, 0.0f};
+	ent->velocity = (Vec3){0.0f, 0.0f, 0.0f};
 
 	ent->collision_layer = 0;
 	ent->collision_mask  = 0;

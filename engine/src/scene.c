@@ -1,5 +1,6 @@
 #include "scene.h"
 #include "box.h"
+#include "vec3.h"
 
 static int Scene_Mod(int x, int y);
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity);
@@ -13,12 +14,22 @@ bool Scene_Reset(Scene *scene, Game *game){
 	scene->game = game;
 	scene->top_free_index = -1;
 	scene->num_entities = 0;
-	scene->camera = (Vec2){0.0f, 0.0f};
+	scene->camera = (Vec3){0.0f, 0.0f, 0.0f};
 	scene->tick = 0;
 
 	scene->loadNextScene = NULL;
 
-	memset(scene->world->tiles, 0, WORLD_DATA_SIZE);
+	for(size_t i = 0; i < WORLD_WIDTH * WORLD_HEIGHT; i++){
+		scene->world->tiles[i] = (Tile) {
+			0.0f,
+			4.0f,
+			0, 0, 0, 0,
+			0.0f, 0.0f,
+			0.0f,
+			0
+		};
+	}
+
 	scene->world->texture = NULL;
 	scene->world->no_bounds = false;
 
@@ -37,6 +48,17 @@ bool Scene_Reset(Scene *scene, Game *game){
 	scene->render_layer_detail     = WORLD_LAYER_DETAIL;
 
 	return true;
+}
+
+bool Scene_BuildWorldMesh(Scene *scene){
+	Mems *stack = scene->game->context->stack;
+
+	for(size_t i = 0; i < MAX_ENTITIES; i++){
+		for(size_t j = 0; j < MAX_ENTITIES; j++){
+			Vec3 bottom_quad[4];
+
+		}
+	}
 }
 
 bool Scene_Update(Scene *scene){
@@ -104,6 +126,52 @@ bool Scene_SetHudTile(Scene *scene, int x, int y, int id){
 	return true;
 }
 
+Tile * Scene_GetTile(Scene *scene, int x, int y){
+	int index;
+
+	if(x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT)
+		return NULL;
+
+	index = WORLD_WIDTH * y + x;
+
+	return &scene->world->tiles[index];
+}
+
+bool Scene_GetTilePropertyMem(Scene *scene, int x, int y, const void *offset, void *value, size_t size){
+	Tile *tile;
+
+	tile = Scene_GetTile(scene, x, y);
+
+	if(tile == NULL)
+		return false;
+
+	memcpy(
+			value,
+			(const void *) ((const char *) tile + (size_t) offset),
+			size
+		  );
+
+	return true;
+}
+
+bool Scene_SetTilePropertyMem(Scene *scene, int x, int y, const void *offset, const void *value, size_t size){
+	Tile *tile;
+
+	tile = Scene_GetTile(scene, x, y);
+
+	if(tile == NULL)
+		return false;
+
+	memcpy(
+			(void *) ((char *) tile + (size_t) offset),
+			value,
+			size
+		  );
+
+	return true;
+}
+
+/*
 int Scene_GetTileId(Scene *scene, int x, int y, int layer){
 	int index;
 
@@ -143,6 +211,7 @@ bool Scene_SetTileId(Scene *scene, int x, int y, int layer, int id){
 
 	return true;
 }
+*/
 
 Entity * Scene_AddEntity(Scene *scene){
 	if(scene == NULL)
@@ -176,6 +245,8 @@ static int Scene_Mod(int x, int y){
 }
 
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
+	return false;
+	/*
 	int start_x, start_y, end_x, end_y;
 	Vec2 block_start, block_size;
 
@@ -204,11 +275,12 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 	}
 
 	return false;
+	*/
 }
 
 static bool Scene_HandlePhysics(Scene *scene){
 	Entity *current;
-	Vec2 delta;
+	Vec3 delta;
 	bool has_collision, found_collision;
 
 	for(size_t i = 0; i < scene->num_entities; i++){
@@ -218,7 +290,7 @@ static bool Scene_HandlePhysics(Scene *scene){
 		if(current->removed)
 			continue;
 
-		Vec2_Mul(&delta, &current->velocity, scene->game->context->dt);
+		Vec3_Mul(&delta, &current->velocity, scene->game->context->dt);
 
 		current->position.x += delta.x;
 
@@ -268,6 +340,8 @@ static bool Scene_HandlePhysics(Scene *scene){
 }
 
 static bool Scene_HandleEntityCollision(Scene *scene){
+	return true;
+	/*
 	Entity *current;
 	Entity *other;
 	Vec2 old_pos;
@@ -299,7 +373,7 @@ static bool Scene_HandleEntityCollision(Scene *scene){
 			else if(is_mask && Box_SolveCollision(&current->position, &current->size, &other->position, &other->size)){
 				bool has_collision_world = (current->collision_mask & scene->world->collision_layer) != 0;
 
-				/* reverter à velha posição caso haja colisão com o mundo */
+				// reverter à velha posição caso haja colisão com o mundo
 				if(Scene_CheckCollisionWorld(scene, current) && has_collision_world){
 					current->position = old_pos;
 				}
@@ -311,6 +385,7 @@ static bool Scene_HandleEntityCollision(Scene *scene){
 	}
 
 	return true;
+	*/
 }
 
 static bool Scene_UpdateLogic(Scene *scene){
@@ -363,7 +438,8 @@ static bool Scene_RenderWorld(Scene *scene, int layer){
 
 	for(int i = start_x; i < end_x; i++){
 		for(int j = start_y; j < end_y; j++){
-			int id = Scene_GetTileId(scene, i, j, layer);
+			//int id = Scene_GetTileId(scene, i, j, layer);
+			int id = -1;
 
 			if(id == -1)
 				continue;

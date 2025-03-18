@@ -4,11 +4,12 @@ project(Lander LANGUAGES C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(GAME_DIR "${PROJECT_SOURCE_DIR}/game")
+set(ENGINE_DIR "${PROJECT_SOURCE_DIR}/engine")
 
 add_subdirectory(external/glad)
 
 file(GLOB all_SRCS
-        "${PROJECT_SOURCE_DIR}/src/*.c"
+		"${ENGINE_DIR}/src/*.c"
 		"${GAME_DIR}/src/*.c"
         )
 
@@ -36,6 +37,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	include/
 	external/glad/include
 	"${GAME_DIR}/include"
+	"${ENGINE_DIR}/include"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

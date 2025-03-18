@@ -7,12 +7,14 @@
 #include "texture.h"
 #include "resource.h"
 #include "entvars.h"
+#include "mesh.h"
 
 typedef struct scene_s Scene;
 typedef struct game_s Game;
 typedef struct entity_s Entity;
 typedef struct world_s World;
 typedef struct hud_s Hud;
+typedef struct tile_s Tile;
 
 struct game_s {
 	Context *context;
@@ -20,10 +22,28 @@ struct game_s {
 	Resource *resources;
 };
 
+struct tile_s {
+	float bottom_height;
+	float top_height;
+
+	uint8_t wall_texture;
+	uint8_t floor_texture;
+	uint8_t ceiling_texture;
+	uint8_t type;
+
+	float plus_top_height;
+	float plus_bottom_height;
+
+	float tan_angle;
+	uint8_t angle_direction;
+};
+
 struct world_s {
 	Texture *texture;
-	uint8_t tiles[WORLD_WIDTH * WORLD_HEIGHT * WORLD_NUM_LAYERS];
+	Tile tiles[WORLD_WIDTH * WORLD_HEIGHT];
 	uint32_t collision_layer;
+
+	Mesh *mesh;
 
 	bool no_bounds;
 };
@@ -46,7 +66,7 @@ struct scene_s {
 
 	World *world;
 	Hud *hud;
-	Vec2 camera;
+	Vec3 camera;
 
 	uint32_t tick;
 
@@ -73,10 +93,10 @@ struct entity_s {
 	/* Tipo da entidade. */
 	int type;
 
-	Vec2 position;
-	Vec2 offset_sprite;
-	Vec2 size;
-	Vec2 velocity;
+	Vec3 position;
+	Vec3 offset_sprite;
+	Vec3 size;
+	Vec3 velocity;
 
 	/* Máscaras de colisão. */
 	uint32_t collision_layer;
