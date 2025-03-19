@@ -46,3 +46,9 @@ float Vec3_Size(const Vec3 *vec){
 float Vec3_Dot(const Vec3 *a, const Vec3 *b){
 	return a->x * b->x + a->y * b->y + a->z * b->z;
 }
+
+void Vec3_Cross(Vec3 *result, const Vec3 *a, const Vec3 *b){
+		result->x = a->y * b->z - a->z * b->y;
+		result->y = a->z * b->x - a->x * b->z;
+		result->z = a->x * b->y - a->y * b->x;
+}

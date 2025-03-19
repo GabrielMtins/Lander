@@ -1,6 +1,7 @@
 #include "scene.h"
 #include "box.h"
 #include "vec3.h"
+#include "builder.h"
 
 static int Scene_Mod(int x, int y);
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity);
@@ -19,19 +20,9 @@ bool Scene_Reset(Scene *scene, Game *game){
 
 	scene->loadNextScene = NULL;
 
-	for(size_t i = 0; i < WORLD_WIDTH * WORLD_HEIGHT; i++){
-		scene->world->tiles[i] = (Tile) {
-			0.0f,
-			4.0f,
-			0, 0, 0, 0,
-			0.0f, 0.0f,
-			0.0f,
-			0
-		};
-	}
-
 	scene->world->texture = NULL;
-	scene->world->no_bounds = false;
+	scene->world->num_sectors = 0;
+	scene->world->num_walls = 0;
 
 	memset(scene->hud->tiles, 0, HUD_NUM_TILES * sizeof(scene->hud->tiles[0]));
 	scene->hud->texture = NULL;
@@ -47,18 +38,30 @@ bool Scene_Reset(Scene *scene, Game *game){
 	scene->render_layer_foreground = WORLD_LAYER_FOREGROUND;
 	scene->render_layer_detail     = WORLD_LAYER_DETAIL;
 
+	/* try */
+	scene->world->num_sectors = 1;
+	scene->world->num_walls = 4;
+	scene->world->sectors[0].num_walls = 4;
+	scene->world->sectors[0].walls = scene->world->walls;
+
+	scene->world->sectors[0].bottom_height = -2.4f;
+	scene->world->sectors[0].top_height = 2.0f;
+
+	scene->world->walls[0].position = (Vec2) {-2.0f, -2.0f};
+	scene->world->walls[0].portal = -1;
+
+	scene->world->walls[1].position = (Vec2) {2.0f, -2.0f};
+	scene->world->walls[1].portal = -1;
+
+	scene->world->walls[2].position = (Vec2) {2.0f, 2.0f};
+	scene->world->walls[2].portal = -1;
+
+	scene->world->walls[3].position = (Vec2) {-2.0f, 2.0f};
+	scene->world->walls[3].portal = 1;
+
+	Builder_BuildMesh(&scene->world->mesh, scene->game->context->stack, scene->world);
+
 	return true;
-}
-
-bool Scene_BuildWorldMesh(Scene *scene){
-	Mems *stack = scene->game->context->stack;
-
-	for(size_t i = 0; i < MAX_ENTITIES; i++){
-		for(size_t j = 0; j < MAX_ENTITIES; j++){
-			Vec3 bottom_quad[4];
-
-		}
-	}
 }
 
 bool Scene_Update(Scene *scene){
@@ -125,93 +128,6 @@ bool Scene_SetHudTile(Scene *scene, int x, int y, int id){
 
 	return true;
 }
-
-Tile * Scene_GetTile(Scene *scene, int x, int y){
-	int index;
-
-	if(x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT)
-		return NULL;
-
-	index = WORLD_WIDTH * y + x;
-
-	return &scene->world->tiles[index];
-}
-
-bool Scene_GetTilePropertyMem(Scene *scene, int x, int y, const void *offset, void *value, size_t size){
-	Tile *tile;
-
-	tile = Scene_GetTile(scene, x, y);
-
-	if(tile == NULL)
-		return false;
-
-	memcpy(
-			value,
-			(const void *) ((const char *) tile + (size_t) offset),
-			size
-		  );
-
-	return true;
-}
-
-bool Scene_SetTilePropertyMem(Scene *scene, int x, int y, const void *offset, const void *value, size_t size){
-	Tile *tile;
-
-	tile = Scene_GetTile(scene, x, y);
-
-	if(tile == NULL)
-		return false;
-
-	memcpy(
-			(void *) ((char *) tile + (size_t) offset),
-			value,
-			size
-		  );
-
-	return true;
-}
-
-/*
-int Scene_GetTileId(Scene *scene, int x, int y, int layer){
-	int index;
-
-	if(scene->world->no_bounds){
-		x = Scene_Mod(x, WORLD_WIDTH);
-		y = Scene_Mod(y, WORLD_HEIGHT);
-	}
-
-	if(x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT)
-		return WORLD_TILE_OUT_OF_BOUNDS;
-
-	if(layer < 0 || layer >= WORLD_NUM_LAYERS)
-		return WORLD_TILE_OUT_OF_BOUNDS;
-
-	index = layer * WORLD_WIDTH * WORLD_HEIGHT + WORLD_WIDTH * y + x;
-
-	return (int) (scene->world->tiles[index]) - 1;
-}
-
-bool Scene_SetTileId(Scene *scene, int x, int y, int layer, int id){
-	int index;
-
-	if(scene->world->no_bounds){
-		x = Scene_Mod(x, WORLD_WIDTH);
-		y = Scene_Mod(y, WORLD_HEIGHT);
-	}
-
-	if(x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT)
-		return false;
-
-	if(layer < 0 || layer >= WORLD_NUM_LAYERS)
-		return false;
-
-	index = layer * WORLD_WIDTH * WORLD_HEIGHT + WORLD_WIDTH * y + x;
-
-	scene->world->tiles[index] = (uint8_t) (id + 1);
-
-	return true;
-}
-*/
 
 Entity * Scene_AddEntity(Scene *scene){
 	if(scene == NULL)

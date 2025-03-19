@@ -22,30 +22,46 @@ struct game_s {
 	Resource *resources;
 };
 
-struct tile_s {
+typedef struct {
+	Vec2 position;
+
+	Vec2 offset;
+	Vec2 scale;
+
+	int portal;
+
+	float texture;
+} WallCfg;
+
+typedef struct {
+	WallCfg *walls;
+	size_t num_walls;
+
+	WallCfg bottom;
+	WallCfg top;
+
 	float bottom_height;
 	float top_height;
 
-	uint8_t wall_texture;
-	uint8_t floor_texture;
-	uint8_t ceiling_texture;
-	uint8_t type;
+	bool is_static;
+	float offset_height;
 
-	float plus_top_height;
-	float plus_bottom_height;
-
-	float tan_angle;
-	uint8_t angle_direction;
-};
+	Mesh *mesh;
+} Sector;
 
 struct world_s {
 	Texture *texture;
-	Tile tiles[WORLD_WIDTH * WORLD_HEIGHT];
 	uint32_t collision_layer;
 
-	Mesh *mesh;
+	Sector sectors[MAX_SECTORS];
+	size_t num_sectors;
 
-	bool no_bounds;
+	WallCfg walls[MAX_WALLS];
+	size_t num_walls;
+
+	float min_height, top_height;
+
+	Mesh mesh;
 };
 
 struct hud_s  {
@@ -118,6 +134,8 @@ struct entity_s {
 
 	/* Tempo em ms para o próximo tempo em que a função think() será chamada */
 	size_t next_think;
+
+	int sector;
 
 	/* A função update é chamada em toda interação */
 	void (*update)(Scene *, Entity *, float);

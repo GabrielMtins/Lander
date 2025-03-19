@@ -84,22 +84,23 @@ bool Game_Loop(Game *game){
 	Mat4 tmp;
 
 	Mat4_RotateY(&tmp, time * 2.0f);
+	//Mat4_Identity(&tmp);
 	Shader_SetUniformMat4(&shader, "model", &tmp);
 
-	Mat4_Transform(&tmp, 0.0f, 0.0f, -2.0f);
+	Mat4_Transform(&tmp, 0.0f, 0.0f, -10.0f);
 	Shader_SetUniformMat4(&shader, "view", &tmp);
 
 	Mat4_PerspectiveProjection(
 			&tmp,
 			(float) INTERNAL_WIDTH / INTERNAL_HEIGHT,
 			50.0f / 180.0f * 3.141592f,
-			0.1f,
-			10.0f
+			100.0f,
+			0.1f
 			);
 
 	Shader_SetUniformMat4(&shader, "projection", &tmp);
 
-	Mesh_Render(&mesh, &shader);
+	Mesh_Render(&game->main_scene->world->mesh, &shader);
 
 	Render_Present(game->context);
 

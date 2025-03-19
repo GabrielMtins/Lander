@@ -7,13 +7,16 @@
 #define INTERNAL_HEIGHT 360
 
 /* Propriedades do mundo */
-#define WORLD_WIDTH 256
-#define WORLD_HEIGHT 256
+#define WORLD_WIDTH 1
+#define WORLD_HEIGHT 1
 #define WORLD_TILE_WIDTH 16
 #define WORLD_TILE_HEIGHT 16
 #define WORLD_NUM_LAYERS 3
 #define WORLD_TILE_OUT_OF_BOUNDS 0
 #define WORLD_DATA_SIZE (WORLD_WIDTH * WORLD_HEIGHT * WORLD_NUM_LAYERS)
+
+#define MAX_SECTORS (4096)
+#define MAX_WALLS (8192)
 
 /* Tamanho do hud em tiles */
 #define HUD_TILE_WIDTH 8
@@ -30,8 +33,8 @@
 #define MAX_SHADERS 64
 #define MAX_MESHES 256
 
-/* Tamanho da memória stack, padrão: 1MB */
-#define STACK_SIZE 1024 * 1024
+/* Tamanho da memória stack, padrão: 16MB */
+#define STACK_SIZE 16 * 1024 * 1024
 
 enum WORLD_LAYERS_ENUM {
 	WORLD_LAYER_BACKGROUND = 0,
