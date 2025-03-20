@@ -38,3 +38,7 @@ float Vec2_SizeSqr(const Vec2 *vec){
 float Vec2_Size(const Vec2 *vec){
 	return sqrt(Vec2_SizeSqr(vec));
 }
+
+float Vec2_Dot(const Vec2 *a, const Vec2 *b){
+	return a->x * b->x + a->y * b->y;
+}

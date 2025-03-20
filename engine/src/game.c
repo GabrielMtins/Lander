@@ -6,21 +6,8 @@
 #include "shader.h"
 #include "mat4.h"
 
-static Mesh mesh;
-static Shader shader;
-
 Game *Game_Create(Context *context){
 	Game *game;
-
-	Shader_Load(
-			&shader,
-			Mems_ReadFileAsString(context->stack, "shaders/brush.vs"), 
-			Mems_ReadFileAsString(context->stack, "shaders/brush.fs")
-			);
-
-	Mesh_BuildUnitTetrahedron(&mesh);
-
-	Mems_Free(context->stack);
 
 	game = (Game *) Mems_Alloc(context->memory, sizeof(Game));
 
@@ -39,7 +26,9 @@ Game *Game_Create(Context *context){
 }
 
 Texture * Game_GetTexture(Game *game, size_t index){
-	if(index < MAX_TEXTURES){ return &game->resources->textures[index]; }
+	if(index < MAX_TEXTURES){
+		return &game->resources->textures[index];
+	}
 
 	return NULL;
 }
@@ -80,40 +69,7 @@ bool Game_Loop(Game *game){
 
 	Render_Clear(game->context, 0, 0, 0, 255);
 	
-	Mat4 tmp, tmp2;
-
-	Mat4_Identity(&tmp);
-	Shader_SetUniformMat4(&shader, "model", &tmp);
-
-	Mat4_RotateY(&tmp, -game->main_scene->camera.angle.y);
-	Mat4_RotateX(&tmp2, -game->main_scene->camera.angle.x);
-	Mat4_Mul(&tmp2, &tmp2, &tmp);
-
-	Mat4_Transform(
-			&tmp,
-			-game->main_scene->camera.position.x, 
-			-game->main_scene->camera.position.y, 
-			-game->main_scene->camera.position.z
-			);
-
-	//Mat4_RotateY(&tmp2, time / 2.0f);
-	Mat4_Mul(&tmp, &tmp2, &tmp);
-	Shader_SetUniformMat4(&shader, "view", &tmp);
-
-	Mat4_PerspectiveProjection(
-			&tmp,
-			(float) INTERNAL_WIDTH / INTERNAL_HEIGHT,
-			60.0f / 180.0f * 3.141592f,
-			100.0f,
-			0.1f
-			);
-
-	Shader_SetUniformMat4(&shader, "projection", &tmp);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, game->resources->texture_array.texture_id);
-
-	Mesh_Render(&game->main_scene->world->mesh, &shader);
+	Scene_Render(game->main_scene);
 
 	Render_Present(game->context);
 

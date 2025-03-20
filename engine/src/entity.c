@@ -12,8 +12,8 @@ bool Entity_Reset(Entity *ent){
 	ent->type = -1;
 
 	ent->position = (Vec3){0.0f, 0.0f, 0.0f};
-	ent->offset_sprite = (Vec3){0.0f, 0.0f, 0.0f};
-	ent->size     = (Vec3){0.0f, 0.0f, 0.0f};
+	ent->radius = 0.0f;
+	ent->height = 0.0f;
 	ent->velocity = (Vec3){0.0f, 0.0f, 0.0f};
 
 	ent->collision_layer = 0;

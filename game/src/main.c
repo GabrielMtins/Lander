@@ -29,6 +29,14 @@ int main(int argc, char **argv){
 	SDL_ShowCursor(0);
 	SDL_SetRelativeMouseMode(1);
 
+	Shader_Load(
+			&game->resources->world_shader,
+			Mems_ReadFileAsString(context->stack, "shaders/brush.vs"), 
+			Mems_ReadFileAsString(context->stack, "shaders/brush.fs")
+			);
+
+	Mems_Free(context->stack);
+
 	TextureArray_Create(&game->resources->texture_array, 64, 64);
 
 	MegaTexture_Load(&game->resources->mega_textures[0], context, "floor.png");

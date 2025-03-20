@@ -12,6 +12,8 @@ typedef struct {
 	Sfx sfx[MAX_SFX];
 	Music musics[MAX_MUSIC];
 	Shader shaders[MAX_SHADERS];
+
+	Shader world_shader;
 } Resource;
 
 #endif

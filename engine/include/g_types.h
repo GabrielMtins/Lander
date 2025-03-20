@@ -37,14 +37,23 @@ typedef struct {
 	WallCfg *walls;
 	size_t num_walls;
 
-	WallCfg bottom;
-	WallCfg top;
+	struct {
+		Vec2 offset;
+		Vec2 scale;
 
-	float bottom_height;
-	float top_height;
+		float height;
+
+		Vec2 origin;
+		Vec2 direction;
+		float step;
+
+		float texture;
+	} bottom, top;
 
 	bool is_static;
 	float offset_height;
+
+	bool visited;
 
 	Mesh *mesh;
 } Sector;
@@ -110,8 +119,8 @@ struct entity_s {
 	int type;
 
 	Vec3 position;
-	Vec3 offset_sprite;
-	Vec3 size;
+	float radius;
+	float height;
 	Vec3 velocity;
 
 	/* Máscaras de colisão. */
@@ -135,6 +144,7 @@ struct entity_s {
 	/* Tempo em ms para o próximo tempo em que a função think() será chamada */
 	size_t next_think;
 
+	/* Indica qual setor o centro da entidade está */
 	int sector;
 
 	/* A função update é chamada em toda interação */

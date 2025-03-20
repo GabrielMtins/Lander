@@ -8,7 +8,7 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity);
 static bool Scene_HandlePhysics(Scene *scene);
 static bool Scene_HandleEntityCollision(Scene *scene);
 static bool Scene_UpdateLogic(Scene *scene);
-static bool Scene_RenderWorld(Scene *scene, int layer);
+static bool Scene_RenderWorld(Scene *scene);
 static bool Scene_RenderHud(Scene *scene);
 
 bool Scene_Reset(Scene *scene, Game *game){
@@ -49,8 +49,15 @@ bool Scene_Reset(Scene *scene, Game *game){
 		scene->world->sectors[0].num_walls = 4;
 		scene->world->sectors[0].walls = scene->world->walls;
 
-		scene->world->sectors[0].bottom_height = -2.4f;
-		scene->world->sectors[0].top_height = 2.0f;
+		scene->world->sectors[0].bottom.height = -6.0f;
+		scene->world->sectors[0].bottom.step = -0.0f;
+		scene->world->sectors[0].bottom.origin = (Vec2){2.0f, 2.0f};
+		scene->world->sectors[0].bottom.direction = (Vec2){1.0f, 0.0f};
+
+		scene->world->sectors[0].top.height = 2.0f;
+		scene->world->sectors[0].top.step = 0.0f;
+		scene->world->sectors[0].top.origin = (Vec2){2.0f, 2.0f};
+		scene->world->sectors[0].top.direction = (Vec2){1.0f, 0.0f};
 	}
 
 	{
@@ -61,12 +68,11 @@ bool Scene_Reset(Scene *scene, Game *game){
 		scene->world->sectors[1].num_walls = 4;
 		scene->world->sectors[1].walls = &scene->world->walls[4];
 
-		scene->world->sectors[1].bottom_height = -4.4f;
-		scene->world->sectors[1].top_height = 4.0f;
+		scene->world->sectors[1].bottom.height = -4.0f;
+		scene->world->sectors[1].bottom.step = 0.0f;
+		scene->world->sectors[1].top.height = 4.0f;
+		scene->world->sectors[1].top.step = 0.0f;
 	}
-
-	for(size_t i = 0; i < scene->world->num_walls; i++)
-		scene->world->walls[i].texture = 1.0f;
 
 	scene->world->walls[0].position = (Vec2) {-2.0f, -2.0f};
 	scene->world->walls[0].portal = -1;
@@ -108,6 +114,10 @@ bool Scene_Reset(Scene *scene, Game *game){
 	scene->world->walls[7].offset = (Vec2) {0.0f, 0.0f};
 	scene->world->walls[7].scale = (Vec2) {1.0f, 1.0f};
 
+	for(size_t i = 0; i < scene->world->num_walls; i++){
+		scene->world->walls[i].texture = 1.0f;
+	}
+
 	if(scene->world->mesh.vao != 0)
 		Mesh_Destroy(&scene->world->mesh);
 
@@ -128,7 +138,7 @@ bool Scene_Update(Scene *scene){
 }
 
 bool Scene_Render(Scene *scene){
-	(void) scene;
+	Scene_RenderWorld(scene);
 
 	return true;
 }
@@ -190,37 +200,8 @@ static int Scene_Mod(int x, int y){
 }
 
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
+	//for(size_t i = 0;
 	return false;
-	/*
-	int start_x, start_y, end_x, end_y;
-	Vec2 block_start, block_size;
-
-	if(scene == NULL || entity->removed || entity == NULL)
-		return false;
-
-	if((scene->world->collision_layer & entity->collision_mask) == 0 && (scene->world->collision_layer & entity->trigger_mask) == 0)
-		return false;
-
-	start_x = floorf(entity->position.x / WORLD_TILE_WIDTH);
-	start_y = floorf(entity->position.y / WORLD_TILE_HEIGHT);
-	end_x = ceilf((entity->position.x + entity->size.x) / WORLD_TILE_WIDTH);
-	end_y = ceilf((entity->position.y + entity->size.y) / WORLD_TILE_HEIGHT);
-
-	for(int i = start_x; i < end_x; i++){
-		for(int j = start_y; j < end_y; j++){
-			if(Scene_GetTileId(scene, i, j, scene->render_layer_foreground) == -1)
-				continue;
-
-			block_start = (Vec2) {i * WORLD_TILE_WIDTH, j * WORLD_TILE_HEIGHT};
-			block_size = (Vec2) {WORLD_TILE_WIDTH, WORLD_TILE_HEIGHT};
-
-			if(Box_CheckCollision(&block_start, &block_size, &entity->position, &entity->size))
-				return true;
-		}
-	}
-
-	return false;
-	*/
 }
 
 static bool Scene_HandlePhysics(Scene *scene){
@@ -237,48 +218,8 @@ static bool Scene_HandlePhysics(Scene *scene){
 
 		Vec3_Mul(&delta, &current->velocity, scene->game->context->dt);
 
-		current->position.x += delta.x;
+		Vec3_Add(&current->position, &current->position, &delta);
 
-		has_collision = (current->collision_mask & scene->world->collision_layer) != 0;
-
-		if(Scene_CheckCollisionWorld(scene, current)){
-			if(has_collision){
-				if(current->velocity.x > 0.0f){
-					current->position.x = floorf((current->position.x + current->size.x) / WORLD_TILE_WIDTH) * WORLD_TILE_WIDTH - current->size.x;
-				}
-				else{
-					current->position.x = ceilf(current->position.x / WORLD_TILE_WIDTH) * WORLD_TILE_WIDTH;
-				}
-
-				current->velocity.x = 0.0f;
-			}
-
-			found_collision = true;
-		}
-
-		current->position.y += delta.y;
-
-		if(Scene_CheckCollisionWorld(scene, current)){
-			if(has_collision){
-				if(current->velocity.y > 0){
-					current->position.y = floorf((current->position.y + current->size.y) / WORLD_TILE_HEIGHT) * WORLD_TILE_HEIGHT - current->size.y;
-				}
-				else{
-					current->position.y = ceilf(current->position.y / WORLD_TILE_HEIGHT) * WORLD_TILE_HEIGHT;
-				}
-
-				current->velocity.y = 0.0f;
-			}
-
-			found_collision = true;
-		}
-
-		if(found_collision){
-			if(has_collision && current->onCollision != NULL)
-				current->onCollision(scene, current, NULL);
-			else if(current->onTrigger != NULL)
-				current->onTrigger(scene, current, NULL);
-		}
 	}
 
 	return true;
@@ -366,46 +307,45 @@ static bool Scene_UpdateLogic(Scene *scene){
 	return true;
 }
 
-static bool Scene_RenderWorld(Scene *scene, int layer){
-	/*
-	int start_x, start_y, end_x, end_y;
-	int screen_x, screen_y;
+static bool Scene_RenderWorld(Scene *scene){
+	Shader *world_shader;
+	Mat4 tmp, tmp2;
 
-	if(scene->world->texture == NULL)
-		return false;
+	world_shader = &scene->game->resources->world_shader;
 
-	if(layer < 0 || layer >= WORLD_NUM_LAYERS)
-		return false;
+	Mat4_Identity(&tmp);
+	Shader_SetUniformMat4(world_shader, "model", &tmp);
 
-	start_x = floorf(scene->camera.x / WORLD_TILE_WIDTH);
-	start_y = floorf(scene->camera.y / WORLD_TILE_HEIGHT);
-	end_x = ceilf((scene->camera.x + scene->game->context->width) / WORLD_TILE_WIDTH);
-	end_y = ceilf((scene->camera.y + scene->game->context->height) / WORLD_TILE_HEIGHT);
+	Mat4_RotateY(&tmp, -scene->camera.angle.y);
+	Mat4_RotateX(&tmp2, -scene->camera.angle.x);
+	Mat4_Mul(&tmp2, &tmp2, &tmp);
 
-	for(int i = start_x; i < end_x; i++){
-		for(int j = start_y; j < end_y; j++){
-			//int id = Scene_GetTileId(scene, i, j, layer);
-			int id = -1;
+	Mat4_Transform(
+			&tmp,
+			-scene->camera.position.x, 
+			-scene->camera.position.y, 
+			-scene->camera.position.z
+			);
 
-			if(id == -1)
-				continue;
+	Mat4_Mul(&tmp, &tmp2, &tmp);
+	Shader_SetUniformMat4(world_shader, "view", &tmp);
 
-			screen_x = i * WORLD_TILE_WIDTH - (int) scene->camera.x;
-			screen_y = j * WORLD_TILE_WIDTH - (int) scene->camera.y;
+	Mat4_PerspectiveProjection(
+			&tmp,
+			(float) INTERNAL_WIDTH / INTERNAL_HEIGHT,
+			60.0f / 180.0f * 3.141592f,
+			100.0f,
+			0.1f
+			);
 
-			Texture_Render(
-					scene->game->context,
-					scene->world->texture,
-					screen_x,
-					screen_y,
-					id,
-					0
-					);
-		}
-	}
+	Shader_SetUniformMat4(world_shader, "projection", &tmp);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, scene->game->resources->texture_array.texture_id);
+
+	Mesh_Render(&scene->world->mesh, world_shader);
 
 	return true;
-	*/
 }
 
 static bool Scene_RenderHud(Scene *scene){

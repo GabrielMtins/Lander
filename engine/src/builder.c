@@ -10,11 +10,14 @@ typedef struct {
 	size_t indices_count;
 } BuilderContext;
 
+typedef struct {
+	float bottom, top;
+} Height;
+
 static bool Builder_BuildSector(World *world, int sector_id, BuilderContext *context);
 static bool Builder_BuildPlane(World *world, int sector_id, BuilderContext *context,  bool bottom);
-static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, float bottom_height, float top_height, BuilderContext *context);
+static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, const Height *start_height, const Height *end_height, BuilderContext *context);
 static bool Builder_BuildWall(World *world, int sector_id, int sector_wall, BuilderContext *context);
-
 
 bool Builder_BuildMesh(Mesh *mesh, Mems *stack, World *world){
 	BuilderContext context;
@@ -32,8 +35,14 @@ bool Builder_BuildMesh(Mesh *mesh, Mems *stack, World *world){
 	context.indices = (unsigned int *) Mems_Alloc(stack, STACK_SIZE / 8);
 
 	for(size_t i = 0; i < world->num_sectors; i++){
-		world->min_height = fminf(world->min_height, world->sectors[i].bottom_height);
-		world->max_height = fmaxf(world->max_height, world->sectors[i].top_height);
+		Sector *sector = &world->sectors[i];
+
+		for(size_t j = 0; j < sector->num_walls; j++){
+			const Vec2 *position = &sector->walls[j].position;
+
+			world->min_height = fminf(world->min_height, Builder_GetHeight(sector, position, true));
+			world->max_height = fmaxf(world->max_height, Builder_GetHeight(sector, position, false));
+		}
 	}
 
 	printf("%f %f\n", world->min_height, world->max_height);
@@ -47,6 +56,33 @@ bool Builder_BuildMesh(Mesh *mesh, Mems *stack, World *world){
 	Mems_RestoreState(stack, state);
 
 	return true;
+}
+
+float Builder_GetHeight(const Sector *sector, const Vec2 *position, bool bottom){
+	const Vec2 *origin, *direction;
+	Vec2 diff;
+	float step, projection, height;
+
+	if(bottom){
+		origin = &sector->bottom.origin;
+		direction = &sector->bottom.direction;
+		step = sector->bottom.step;
+		height = sector->bottom.height;
+	}
+	else{
+		origin = &sector->top.origin;
+		direction = &sector->top.direction;
+		step = sector->top.step;
+		height = sector->top.height;
+	}
+
+	if(step == 0.0f)
+		return height;
+
+	Vec2_Sub(&diff, position, origin);
+	projection = Vec2_Dot(&diff, direction);
+
+	return projection * step + height;
 }
 
 static bool Builder_BuildSector(World *world, int sector_id, BuilderContext *context){
@@ -71,15 +107,24 @@ static bool Builder_BuildPlane(World *world, int sector_id, BuilderContext *cont
 
 	for(size_t i = 0; i < sector->num_walls; i++){
 		const Vec2 *position = &sector->walls[i].position;
+		Vertex *vertex = &context->vertices[context->vertices_count + i];
 
-		context->vertices[context->vertices_count + i].position = (Vec3){position->x, sector->top_height, position->y};
-		context->vertices[context->vertices_count + i].uv = *position;
-		context->vertices[context->vertices_count + i].normal = (Vec3){0.0f, 1.0f, 0.0f};
-		context->vertices[context->vertices_count + i].layer_index = sector->bottom.texture;
-		context->vertices[context->vertices_count + i].color = (Vec3) {0.0f, 1.0f, 0.0f};
+		vertex->position = (Vec3){position->x, sector->top.height, position->y};
+		vertex->uv = *position;
+		vertex->normal = (Vec3){0.0f, 1.0f, 0.0f};
+		vertex->layer_index = sector->bottom.texture;
+		vertex->color = (Vec3) {0.0f, 1.0f, 0.0f};
 
-		if(bottom)
-			context->vertices[context->vertices_count + i].position.y = sector->bottom_height;
+		if(bottom){
+			vertex->position.y = Builder_GetHeight(sector, position, true);
+			vertex->uv.x = vertex->uv.x * sector->bottom.scale.x + sector->bottom.offset.x;
+			vertex->uv.y = vertex->uv.y * sector->bottom.scale.y + sector->bottom.offset.y;
+		}
+		else{
+			vertex->position.y = Builder_GetHeight(sector, position, false);
+			vertex->uv.x = vertex->uv.x * sector->top.scale.x + sector->top.offset.x;
+			vertex->uv.y = vertex->uv.y * sector->top.scale.y + sector->top.offset.y;
+		}
 	}
 
 	for(size_t i = 1; i < sector->num_walls - 1; i++){
@@ -95,14 +140,15 @@ static bool Builder_BuildPlane(World *world, int sector_id, BuilderContext *cont
 	return true;
 }
 
-static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, float bottom_height, float top_height, BuilderContext *context){
+static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, const Height *start_height, const Height *end_height, BuilderContext *context){
 	Vec2 diff;
 	Vec3 normal;
-	float size, diff_height;
+	float size;
 
-	diff_height = top_height - bottom_height;
+	if(start_height->top - start_height->bottom <= 0.0f)
+		return false;
 
-	if(diff_height <= 0.0f)
+	if(end_height->top - end_height->bottom <= 0.0f)
 		return false;
 
 	Vec2_Sub(&diff, &cfg->position, end);
@@ -113,37 +159,37 @@ static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, float botto
 	Vertex_CreateSimple(
 			&context->vertices[context->vertices_count],
 			cfg->position.x,
-			bottom_height,
+			start_height->bottom, 
 			cfg->position.y,
 			cfg->offset.x,
-			cfg->offset.y
+			cfg->offset.y + cfg->scale.y * start_height->bottom
 			);
 
 	Vertex_CreateSimple(
 			&context->vertices[context->vertices_count + 1],
 			cfg->position.x,
-			top_height,
+			start_height->top,
 			cfg->position.y,
 			cfg->offset.x,
-			cfg->offset.y + cfg->scale.y * diff_height
+			cfg->offset.y + cfg->scale.y * (start_height->top)
 			);
 
 	Vertex_CreateSimple(
 			&context->vertices[context->vertices_count + 2],
 			end->x,
-			bottom_height,
+			end_height->bottom,
 			end->y,
 			cfg->offset.x + cfg->scale.x * size,
-			cfg->offset.y
+			cfg->offset.y + cfg->scale.y * end_height->bottom
 			);
 
 	Vertex_CreateSimple(
 			&context->vertices[context->vertices_count + 3],
 			end->x,
-			top_height,
+			end_height->top,
 			end->y,
 			cfg->offset.x + cfg->scale.x * size,
-			cfg->offset.y + cfg->scale.y * diff_height
+			cfg->offset.y + cfg->scale.y * (end_height->top)
 			);
 
 	context->indices[context->indices_count + 0] = context->vertices_count;
@@ -168,35 +214,70 @@ static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, float botto
 
 static bool Builder_BuildWall(World *world, int sector_id, int sector_wall, BuilderContext *context){
 	Sector *sector;
+	Height start_height, end_height;
+	WallCfg *start_wall, *end_wall;
 	int next_sector_wall;
 
 	sector = &world->sectors[sector_id];
 	next_sector_wall = (sector_wall + 1) % sector->num_walls;
 
+	start_wall = &sector->walls[sector_wall];
+	end_wall = &sector->walls[next_sector_wall];
+
 	if(sector->walls[sector_wall].portal != -1){
 		/* Build portal windows */
+		start_height = (Height) {
+			world->min_height,
+			Builder_GetHeight(sector, &start_wall->position, true)
+		};
+
+		end_height = (Height) {
+			world->min_height,
+			Builder_GetHeight(sector, &end_wall->position, true)
+		};
+
 		Builder_BuildWallEx(
-				&world->sectors[sector_id].walls[sector_wall],
-				&world->sectors[sector_id].walls[next_sector_wall].position,
-				world->min_height,
-				sector->bottom_height,
+				start_wall,
+				&end_wall->position,
+				&start_height,
+				&end_height,
 				context
 				);
 
+		start_height = (Height) {
+			Builder_GetHeight(sector, &start_wall->position, false),
+			world->max_height
+		};
+
+		end_height = (Height) {
+			Builder_GetHeight(sector, &end_wall->position, false),
+			world->max_height
+		};
+
 		Builder_BuildWallEx(
-				&world->sectors[sector_id].walls[sector_wall],
-				&world->sectors[sector_id].walls[next_sector_wall].position,
-				sector->top_height,
-				world->max_height,
+				start_wall,
+				&end_wall->position,
+				&start_height,
+				&end_height,
 				context
 				);
 	}
 	else{
+		start_height = (Height) {
+			Builder_GetHeight(sector, &start_wall->position, true),
+			Builder_GetHeight(sector, &start_wall->position, false)
+		};	
+
+		end_height = (Height) {
+			Builder_GetHeight(sector, &end_wall->position, true),
+			Builder_GetHeight(sector, &end_wall->position, false)
+		};	
+
 		Builder_BuildWallEx(
-				&world->sectors[sector_id].walls[sector_wall],
-				&world->sectors[sector_id].walls[next_sector_wall].position,
-				sector->bottom_height,
-				sector->top_height,
+				&sector->walls[sector_wall],
+				&sector->walls[next_sector_wall].position,
+				&start_height,
+				&end_height,
 				context
 				);
 	}
