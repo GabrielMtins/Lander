@@ -24,9 +24,9 @@ int main(int argc, char **argv){
 	context = Context_Create("hi", INTERNAL_WIDTH, INTERNAL_HEIGHT, &memory, &stack);
 	game = Game_Create(context);
 
-	TextureArray_Create(&game->resources->texture_array, 128, 128);
+	TextureArray_Create(&game->resources->texture_array, 64, 64);
 
-	MegaTexture_Load(&game->resources->mega_textures[0], context, "tile.png");
+	MegaTexture_Load(&game->resources->mega_textures[0], context, "floor.png");
 	TextureArray_Load(&game->resources->texture_array, context, "floor.png");
 
 	Texture_Create(
@@ -34,10 +34,10 @@ int main(int argc, char **argv){
 			&game->resources->mega_textures[0],
 			0,
 			0,
-			224,
-			16,
-			WORLD_TILE_WIDTH,
-			WORLD_TILE_HEIGHT
+			64,
+			64,
+			64,
+			64
 			);
 
 	Scene_SetHudTexture(game->main_scene, Game_GetTexture(game, 0));

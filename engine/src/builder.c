@@ -81,6 +81,7 @@ static bool Builder_BuildWall(World *world, int sector_id, int sector_wall, Vert
 	Sector *sector;
 	int next_sector_wall;
 	const Vec2 *position, *offset, *scale;
+	Vec3 normal;
 	Vec2 diff;
 	float diff_height, size;
 
@@ -99,6 +100,8 @@ static bool Builder_BuildWall(World *world, int sector_id, int sector_wall, Vert
 
 	Vec2_Sub(&diff, position, &sector->walls[next_sector_wall].position);
 	size = Vec2_Size(&diff);
+	normal = (Vec3){-diff.y, 0.0f, diff.x};
+	Vec3_Normalize(&normal, &normal);
 
 	printf("%f %f\n", position->x, position->y);
 
@@ -150,8 +153,10 @@ static bool Builder_BuildWall(World *world, int sector_id, int sector_wall, Vert
 	indices[*indices_count + 4] = *vertices_count + 1;
 	indices[*indices_count + 5] = *vertices_count + 3;
 
-	for(size_t i = 0; i < 4; i++)
+	for(size_t i = 0; i < 4; i++){
 		vertices[*vertices_count + i].color = (Vec3) {1.0f, 1.0f, 1.0f};
+		vertices[*vertices_count + i].normal = normal;
+	}
 
 	*vertices_count += 4;
 	*indices_count += 6;

@@ -31,6 +31,7 @@ Game *Game_Create(Context *context){
 	game->main_scene->entities = (Entity *) Mems_Alloc(context->memory, sizeof(Entity) * MAX_ENTITIES);
 	game->main_scene->world = Mems_Alloc(context->memory, sizeof(World));
 	game->main_scene->hud = Mems_Alloc(context->memory, sizeof(Hud));
+	game->main_scene->world->mesh.vao = 0;
 
 	Scene_Reset(game->main_scene, game);
 
@@ -79,13 +80,16 @@ bool Game_Loop(Game *game){
 
 	Render_Clear(game->context, 0, 0, 0, 255);
 	
-	Mat4 tmp;
+	Mat4 tmp, tmp2;
 
-	Mat4_RotateY(&tmp, time * 2.0f);
+	Mat4_RotateY(&tmp, time / 2.0f);
+	//Mat4_RotateY(&tmp, 3.141592 / 2);
+	//Mat4_RotateX(&tmp2, 0.2f);
+	//Mat4_Mul(&tmp, &tmp2, &tmp);
 	//Mat4_Identity(&tmp);
 	Shader_SetUniformMat4(&shader, "model", &tmp);
 
-	Mat4_Transform(&tmp, 0.0f, 0.0f, -10.0f);
+	Mat4_Transform(&tmp, 0.0f, 0.0f, -8.0f);
 	Shader_SetUniformMat4(&shader, "view", &tmp);
 
 	Mat4_PerspectiveProjection(
@@ -97,6 +101,9 @@ bool Game_Loop(Game *game){
 			);
 
 	Shader_SetUniformMat4(&shader, "projection", &tmp);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, game->resources->texture_array.texture_id);
 
 	Mesh_Render(&game->main_scene->world->mesh, &shader);
 

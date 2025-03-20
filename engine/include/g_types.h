@@ -87,10 +87,6 @@ struct scene_s {
 	uint32_t tick;
 
 	void (*loadNextScene)(Scene *);
-
-	int render_layer_background;
-	int render_layer_foreground;
-	int render_layer_detail;
 };
 
 /* Estrutura da entidade de fato. Se quiser adicionar componentes

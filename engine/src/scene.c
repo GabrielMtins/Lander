@@ -34,11 +34,13 @@ bool Scene_Reset(Scene *scene, Game *game){
 
 	scene->world->collision_layer = 1;
 
-	scene->render_layer_background = WORLD_LAYER_BACKGROUND;
-	scene->render_layer_foreground = WORLD_LAYER_FOREGROUND;
-	scene->render_layer_detail     = WORLD_LAYER_DETAIL;
-
 	/* try */
+	scene->world->sectors[0].bottom.offset = (Vec2){0.0f, 0.0f};
+	scene->world->sectors[0].bottom.scale = (Vec2){1.0f, 1.0f};
+
+	scene->world->sectors[0].top.offset = (Vec2){0.0f, 0.0f};
+	scene->world->sectors[0].top.scale = (Vec2){1.0f, 1.0f};
+
 	scene->world->num_sectors = 1;
 	scene->world->num_walls = 4;
 	scene->world->sectors[0].num_walls = 4;
@@ -49,15 +51,26 @@ bool Scene_Reset(Scene *scene, Game *game){
 
 	scene->world->walls[0].position = (Vec2) {-2.0f, -2.0f};
 	scene->world->walls[0].portal = -1;
+	scene->world->walls[0].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[0].scale = (Vec2) {1.0f, 1.0f};
 
 	scene->world->walls[1].position = (Vec2) {2.0f, -2.0f};
 	scene->world->walls[1].portal = -1;
+	scene->world->walls[1].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[1].scale = (Vec2) {1.0f, 1.0f};
 
 	scene->world->walls[2].position = (Vec2) {2.0f, 2.0f};
 	scene->world->walls[2].portal = -1;
+	scene->world->walls[2].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[2].scale = (Vec2) {1.0f, 1.0f};
 
 	scene->world->walls[3].position = (Vec2) {-2.0f, 2.0f};
 	scene->world->walls[3].portal = 1;
+	scene->world->walls[3].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[3].scale = (Vec2) {1.0f, 1.0f};
+
+	if(scene->world->mesh.vao != 0)
+		Mesh_Destroy(&scene->world->mesh);
 
 	Builder_BuildMesh(&scene->world->mesh, scene->game->context->stack, scene->world);
 
@@ -76,30 +89,7 @@ bool Scene_Update(Scene *scene){
 }
 
 bool Scene_Render(Scene *scene){
-	Entity *current;
-
-	Scene_RenderWorld(scene, scene->render_layer_background);
-	Scene_RenderWorld(scene, scene->render_layer_foreground);
-
-	/* Renderizar entidades */
-	for(size_t i = 0; i < scene->num_entities; i++){
-		current = &scene->entities[i];
-
-		if(current->removed || current->texture == NULL)
-			continue;
-
-		Texture_Render(
-				scene->game->context,
-				current->texture,
-				current->position.x + current->offset_sprite.x - scene->camera.x,
-				current->position.y + current->offset_sprite.y - scene->camera.y,
-				current->cell_id,
-				0
-				);
-	}
-
-	Scene_RenderWorld(scene, scene->render_layer_detail);
-	Scene_RenderHud(scene);
+	(void) scene;
 
 	return true;
 }

@@ -81,8 +81,8 @@ bool TextureArray_Create(TextureArray *texture_array, int w, int h){
 			NULL
 			);
 
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
@@ -95,7 +95,7 @@ bool TextureArray_Load(TextureArray *texture_array, Context *context, const char
 	(void) context;
 	SDL_Surface *surface, *default_format;
 
-	glGenTextures(1, &texture_array->texture_id);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, texture_array->texture_id);
 
 	surface = IMG_Load(filename);
 
