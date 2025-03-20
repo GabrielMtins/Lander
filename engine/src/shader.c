@@ -66,6 +66,18 @@ bool Shader_Use(Shader *shader){
 	return true;
 }
 
+bool Shader_SetUniform1i(Shader *shader, const char *name, int i){
+	int location = Shader_GetLocation(shader, name);
+
+	if(location < 0)
+		return false;
+
+	glUseProgram(shader->id);
+	glUniform1i(location, i);
+
+	return true;
+}
+
 bool Shader_SetUniform3f(Shader *shader, const char *name, float x, float y, float z){
 	int location = Shader_GetLocation(shader, name);
 

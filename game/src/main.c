@@ -24,7 +24,10 @@ int main(int argc, char **argv){
 	context = Context_Create("hi", INTERNAL_WIDTH, INTERNAL_HEIGHT, &memory, &stack);
 	game = Game_Create(context);
 
+	TextureArray_Create(&game->resources->texture_array, 128, 128);
+
 	MegaTexture_Load(&game->resources->mega_textures[0], context, "tile.png");
+	TextureArray_Load(&game->resources->texture_array, context, "floor.png");
 
 	Texture_Create(
 			&game->resources->textures[0], 

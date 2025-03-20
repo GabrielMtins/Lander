@@ -8,6 +8,7 @@
 typedef struct {
 	MegaTexture mega_textures[MAX_MEGA_TEXTURES];
 	Texture textures[MAX_TEXTURES];
+	TextureArray texture_array;
 	Sfx sfx[MAX_SFX];
 	Music musics[MAX_MUSIC];
 	Shader shaders[MAX_SHADERS];

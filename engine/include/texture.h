@@ -3,10 +3,18 @@
 
 #include "context.h"
 
+/* Usada para texture atlas */
 typedef struct {
 	unsigned int texture_id;
 	int w, h;
 } MegaTexture;
+
+/* Usada para texture array */
+typedef struct {
+	unsigned int texture_id;
+	int w, h;
+	size_t size;
+} TextureArray;
 
 typedef struct {
 	MegaTexture *mega_texture;
@@ -17,6 +25,10 @@ typedef struct {
 } Texture;
 
 bool Texture_LoadDefaults(void);
+
+bool TextureArray_Create(TextureArray *texture_array, int w, int h);
+
+bool TextureArray_Load(TextureArray *texture_array, Context *context, const char *filename);
 
 bool MegaTexture_Load(MegaTexture *mega_texture, Context *context, const char *filename);
 

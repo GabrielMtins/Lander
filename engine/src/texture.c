@@ -61,6 +61,66 @@ bool Texture_LoadDefaults(void){
 	return false;
 }
 
+bool TextureArray_Create(TextureArray *texture_array, int w, int h){
+	texture_array->w = w;
+	texture_array->h = h;
+	texture_array->size = 0;
+
+	glGenTextures(1, &texture_array->texture_id);
+
+	glBindTexture(GL_TEXTURE_2D_ARRAY, texture_array->texture_id);
+
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 
+			0,
+			GL_RGBA8,
+			w, h,
+			64,
+			0,
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
+			NULL
+			);
+
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+	return true;
+}
+
+bool TextureArray_Load(TextureArray *texture_array, Context *context, const char *filename){
+	(void) context;
+	SDL_Surface *surface, *default_format;
+
+	glGenTextures(1, &texture_array->texture_id);
+
+	surface = IMG_Load(filename);
+
+	if(surface == NULL){
+		fprintf(stderr, "Failed to load texture: %s\n", filename);
+		return false;
+	}
+
+	default_format = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
+	SDL_FreeSurface(surface);
+	surface = default_format;
+
+	glTexSubImage3D(
+			GL_TEXTURE_2D_ARRAY, 
+			0, 
+			0, 0, texture_array->size++,
+			texture_array->w, texture_array->h, 1,
+			GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels
+			);
+
+	SDL_FreeSurface(surface);
+
+	return true;
+}
+
 bool MegaTexture_Load(MegaTexture *mega_texture, Context *context, const char *filename){
 	(void) context;
 

@@ -38,9 +38,7 @@ Game *Game_Create(Context *context){
 }
 
 Texture * Game_GetTexture(Game *game, size_t index){
-	if(index < MAX_TEXTURES){
-		return &game->resources->textures[index];
-	}
+	if(index < MAX_TEXTURES){ return &game->resources->textures[index]; }
 
 	return NULL;
 }
@@ -93,7 +91,7 @@ bool Game_Loop(Game *game){
 	Mat4_PerspectiveProjection(
 			&tmp,
 			(float) INTERNAL_WIDTH / INTERNAL_HEIGHT,
-			50.0f / 180.0f * 3.141592f,
+			60.0f / 180.0f * 3.141592f,
 			100.0f,
 			0.1f
 			);

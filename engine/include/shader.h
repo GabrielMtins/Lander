@@ -12,6 +12,8 @@ bool Shader_Load(Shader *shader, const char *vertex_src, const char *fragment_sr
 
 bool Shader_Use(Shader *shader);
 
+bool Shader_SetUniform1i(Shader *shader, const char *name, int i);
+
 bool Shader_SetUniform3f(Shader *shader, const char *name, float x, float y, float z);
 bool Shader_SetUniform4f(Shader *shader, const char *name, float x, float y, float z, float w);
 bool Shader_SetUniformMat4(Shader *shader, const char *name, const Mat4 *mat4);
