@@ -82,7 +82,11 @@ struct scene_s {
 
 	World *world;
 	Hud *hud;
-	Vec3 camera;
+
+	struct {
+		Vec3 position;
+		Vec3 angle;
+	} camera;
 
 	uint32_t tick;
 

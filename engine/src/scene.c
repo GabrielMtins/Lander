@@ -15,7 +15,8 @@ bool Scene_Reset(Scene *scene, Game *game){
 	scene->game = game;
 	scene->top_free_index = -1;
 	scene->num_entities = 0;
-	scene->camera = (Vec3){0.0f, 0.0f, 0.0f};
+	scene->camera.position = (Vec3){0.0f, 0.0f, 0.0f};
+	scene->camera.angle = (Vec3){0.0f, 0.0f, 0.0f};
 	scene->tick = 0;
 
 	scene->loadNextScene = NULL;
@@ -366,6 +367,7 @@ static bool Scene_UpdateLogic(Scene *scene){
 }
 
 static bool Scene_RenderWorld(Scene *scene, int layer){
+	/*
 	int start_x, start_y, end_x, end_y;
 	int screen_x, screen_y;
 
@@ -403,6 +405,7 @@ static bool Scene_RenderWorld(Scene *scene, int layer){
 	}
 
 	return true;
+	*/
 }
 
 static bool Scene_RenderHud(Scene *scene){

@@ -7,6 +7,8 @@
 #include "scene.h"
 #include "entity.h"
 
+#include "player.h"
+
 #define MEMORY_USED 1024 * 1024 * 32
 
 int main(int argc, char **argv){
@@ -23,6 +25,9 @@ int main(int argc, char **argv){
 
 	context = Context_Create("hi", INTERNAL_WIDTH, INTERNAL_HEIGHT, &memory, &stack);
 	game = Game_Create(context);
+
+	SDL_ShowCursor(0);
+	SDL_SetRelativeMouseMode(1);
 
 	TextureArray_Create(&game->resources->texture_array, 64, 64);
 
@@ -45,6 +50,9 @@ int main(int argc, char **argv){
 	Scene_SetHudTile(game->main_scene, 4, 4, 1);
 
 	Context_SetFps(context, 60);
+
+	Entity *player = Scene_AddEntity(game->main_scene);
+	Player_Create(player);
 
 	Game_Run(game);
 

@@ -85,8 +85,18 @@ bool Game_Loop(Game *game){
 	Mat4_Identity(&tmp);
 	Shader_SetUniformMat4(&shader, "model", &tmp);
 
-	Mat4_Transform(&tmp, 4.0f, 2.0f, 0.0f);
-	Mat4_RotateY(&tmp2, time / 2.0f);
+	Mat4_RotateY(&tmp, -game->main_scene->camera.angle.y);
+	Mat4_RotateX(&tmp2, -game->main_scene->camera.angle.x);
+	Mat4_Mul(&tmp2, &tmp2, &tmp);
+
+	Mat4_Transform(
+			&tmp,
+			-game->main_scene->camera.position.x, 
+			-game->main_scene->camera.position.y, 
+			-game->main_scene->camera.position.z
+			);
+
+	//Mat4_RotateY(&tmp2, time / 2.0f);
 	Mat4_Mul(&tmp, &tmp2, &tmp);
 	Shader_SetUniformMat4(&shader, "view", &tmp);
 

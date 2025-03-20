@@ -21,5 +21,6 @@ void Mat4_RotateX(Mat4 *result, float angle);
 void Mat4_RotateY(Mat4 *result, float angle);
 void Mat4_RotateZ(Mat4 *result, float angle);
 void Mat4_PerspectiveProjection(Mat4 *result, float aspect_ratio, float fov, float far, float near);
+void Mat4_MulVector(Vec3 *result, const Mat4 *mat4, const Vec3 *vec);
 
 #endif

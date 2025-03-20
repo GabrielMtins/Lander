@@ -109,6 +109,8 @@ bool Context_SetDataFromFile(Context *context, const char *filename){
 void Context_PollEvent(Context *context){
 	SDL_Event e;
 	size_t new_tick;
+	context->mouse_xrel = 0;
+	context->mouse_yrel = 0;
 
 	new_tick = SDL_GetTicks();
 	context->delta_tick = (new_tick - context->tick);
@@ -127,6 +129,10 @@ void Context_PollEvent(Context *context){
 			context->quit = true;
 		else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED){
 			glViewport(0, 0, e.window.data1, e.window.data2);
+		}
+		else if(e.type == SDL_MOUSEMOTION){
+			context->mouse_xrel = e.motion.xrel;
+			context->mouse_yrel = e.motion.yrel;
 		}
 	}
 
@@ -152,6 +158,15 @@ static void Context_SetDefaultMapping(Context *context){
 	context->key_mapping[INPUT_RIGHT] = SDL_SCANCODE_D;
 	context->key_mapping[INPUT_UP] = SDL_SCANCODE_W;
 	context->key_mapping[INPUT_DOWN] = SDL_SCANCODE_S;
+	context->key_mapping[INPUT_FIRE1] = SDL_SCANCODE_J;
+	context->key_mapping[INPUT_FIRE2] = SDL_SCANCODE_K;
+	context->key_mapping[INPUT_JUMP] = SDL_SCANCODE_SPACE;
+	context->key_mapping[INPUT_CRAWL] = SDL_SCANCODE_LSHIFT;
+	/*
+	context->key_mapping[INPUT_LEFT] = SDL_SCANCODE_A;
+	context->key_mapping[INPUT_RIGHT] = SDL_SCANCODE_D;
+	context->key_mapping[INPUT_UP] = SDL_SCANCODE_W;
+	context->key_mapping[INPUT_DOWN] = SDL_SCANCODE_S;
 	context->key_mapping[INPUT_Y] = SDL_SCANCODE_J;
 	context->key_mapping[INPUT_B] = SDL_SCANCODE_K;
 	context->key_mapping[INPUT_X] = SDL_SCANCODE_U;
@@ -173,4 +188,5 @@ static void Context_SetDefaultMapping(Context *context){
 	context->button_mapping[INPUT_R] = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
 	context->button_mapping[INPUT_START] = SDL_CONTROLLER_BUTTON_START;
 	context->button_mapping[INPUT_SELECT] = SDL_CONTROLLER_BUTTON_BACK;
+	*/
 }

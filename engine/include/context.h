@@ -20,14 +20,10 @@ enum keys_e {
 	INPUT_DOWN,
 	INPUT_UP,
 	INPUT_RIGHT,
-	INPUT_SELECT,
-	INPUT_START,
-	INPUT_A,
-	INPUT_B,
-	INPUT_X,
-	INPUT_Y,
-	INPUT_L,
-	INPUT_R,
+	INPUT_JUMP,
+	INPUT_CRAWL,
+	INPUT_FIRE1,
+	INPUT_FIRE2,
 	NUM_KEYS
 };
 
@@ -41,6 +37,7 @@ typedef struct {
 
 	size_t tick;
 	size_t delta_tick;
+	int mouse_xrel, mouse_yrel;
 	float dt;
 
 	size_t min_time_frame;

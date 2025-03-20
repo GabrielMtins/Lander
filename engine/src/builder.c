@@ -186,8 +186,8 @@ static bool Builder_BuildWall(World *world, int sector_id, int sector_wall, Buil
 		Builder_BuildWallEx(
 				&world->sectors[sector_id].walls[sector_wall],
 				&world->sectors[sector_id].walls[next_sector_wall].position,
-				world->max_height,
 				sector->top_height,
+				world->max_height,
 				context
 				);
 	}
@@ -203,90 +203,4 @@ static bool Builder_BuildWall(World *world, int sector_id, int sector_wall, Buil
 
 
 	return true;
-
-	/*
-	Sector *sector;
-	int next_sector_wall;
-	const Vec2 *position, *offset, *scale;
-	Vec3 normal;
-	Vec2 diff;
-	float diff_height, size;
-
-	sector = &world->sectors[sector_id];
-	next_sector_wall = (sector_wall + 1) % sector->num_walls;
-
-	if(sector->walls[sector_wall].portal != -1)
-		return false;
-
-	diff_height = sector->top_height - sector->bottom_height;
-
-	position = &sector->walls[sector_wall].position;
-	offset = &sector->walls[sector_wall].offset;
-	scale = &sector->walls[sector_wall].scale;
-
-	Vec2_Sub(&diff, position, &sector->walls[next_sector_wall].position);
-	size = Vec2_Size(&diff);
-	normal = (Vec3){-diff.y, 0.0f, diff.x};
-	Vec3_Normalize(&normal, &normal);
-
-	printf("%f %f\n", position->x, position->y);
-
-	Vertex_CreateSimple(
-			&context->vertices[context->vertices_count],
-			position->x,
-			sector->bottom_height,
-			position->y,
-			offset->x,
-			offset->y
-			);
-
-	Vertex_CreateSimple(
-			&context->vertices[context->vertices_count + 1],
-			position->x,
-			sector->top_height,
-			position->y,
-			offset->x,
-			offset->y + scale->y * diff_height
-			);
-
-	position = &sector->walls[next_sector_wall].position;
-
-	printf("%f %f\n\n", position->x, position->y);
-
-	Vertex_CreateSimple(
-			&context->vertices[context->vertices_count + 2],
-			position->x,
-			sector->bottom_height,
-			position->y,
-			offset->x + scale->x * size,
-			offset->y
-			);
-
-	Vertex_CreateSimple(
-			&context->vertices[context->vertices_count + 3],
-			position->x,
-			sector->top_height,
-			position->y,
-			offset->x + scale->x * size,
-			offset->y + scale->y * diff_height
-			);
-
-	context->indices[context->indices_count + 0] = context->vertices_count;
-	context->indices[context->indices_count + 1] = context->vertices_count + 2;
-	context->indices[context->indices_count + 2] = context->vertices_count + 3;
-
-	context->indices[context->indices_count + 3] = context->vertices_count + 0;
-	context->indices[context->indices_count + 4] = context->vertices_count + 1;
-	context->indices[context->indices_count + 5] = context->vertices_count + 3;
-
-	for(size_t i = 0; i < 4; i++){
-		context->vertices[context->vertices_count + i].color = (Vec3) {1.0f, 1.0f, 1.0f};
-		context->vertices[context->vertices_count + i].normal = normal;
-	}
-
-	context->vertices_count += 4;
-	context->indices_count += 6;
-
-	return true;
-	*/
 }

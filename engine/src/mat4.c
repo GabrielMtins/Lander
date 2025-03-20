@@ -125,3 +125,15 @@ void Mat4_PerspectiveProjection(Mat4 *result, float aspect_ratio, float fov, flo
 	result->arr[11] = a2;
 	result->arr[14] = -1.0f;
 }
+
+void Mat4_MulVector(Vec3 *result, const Mat4 *mat4, const Vec3 *vec){
+	float x, y, z;
+
+	x = mat4->arr[0] * vec->x + mat4->arr[1] * vec->y + mat4->arr[2] * vec->z + mat4->arr[3];
+	y = mat4->arr[4] * vec->x + mat4->arr[5] * vec->y + mat4->arr[6] * vec->z + mat4->arr[7];
+	z = mat4->arr[8] * vec->x + mat4->arr[9] * vec->y + mat4->arr[10] * vec->z + mat4->arr[11];
+
+	result->x = x;
+	result->y = y;
+	result->z = z;
+}
