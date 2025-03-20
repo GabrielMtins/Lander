@@ -35,19 +35,37 @@ bool Scene_Reset(Scene *scene, Game *game){
 	scene->world->collision_layer = 1;
 
 	/* try */
-	scene->world->sectors[0].bottom.offset = (Vec2){0.0f, 0.0f};
-	scene->world->sectors[0].bottom.scale = (Vec2){1.0f, 1.0f};
+	/* world configs */
+	scene->world->num_sectors = 2;
+	scene->world->num_walls = 8;
 
-	scene->world->sectors[0].top.offset = (Vec2){0.0f, 0.0f};
-	scene->world->sectors[0].top.scale = (Vec2){1.0f, 1.0f};
+	/* sector configs */
+	{
+		scene->world->sectors[0].bottom.offset = (Vec2){0.0f, 0.0f};
+		scene->world->sectors[0].bottom.scale = (Vec2){1.0f, 1.0f};
+		scene->world->sectors[0].top.offset = (Vec2){0.0f, 0.0f};
+		scene->world->sectors[0].top.scale = (Vec2){1.0f, 1.0f};
+		scene->world->sectors[0].num_walls = 4;
+		scene->world->sectors[0].walls = scene->world->walls;
 
-	scene->world->num_sectors = 1;
-	scene->world->num_walls = 4;
-	scene->world->sectors[0].num_walls = 4;
-	scene->world->sectors[0].walls = scene->world->walls;
+		scene->world->sectors[0].bottom_height = -2.4f;
+		scene->world->sectors[0].top_height = 2.0f;
+	}
 
-	scene->world->sectors[0].bottom_height = -2.4f;
-	scene->world->sectors[0].top_height = 2.0f;
+	{
+		scene->world->sectors[1].bottom.offset = (Vec2){0.0f, 0.0f};
+		scene->world->sectors[1].bottom.scale = (Vec2){1.0f, 1.0f};
+		scene->world->sectors[1].top.offset = (Vec2){0.0f, 0.0f};
+		scene->world->sectors[1].top.scale = (Vec2){1.0f, 1.0f};
+		scene->world->sectors[1].num_walls = 4;
+		scene->world->sectors[1].walls = &scene->world->walls[4];
+
+		scene->world->sectors[1].bottom_height = -4.4f;
+		scene->world->sectors[1].top_height = 4.0f;
+	}
+
+	for(size_t i = 0; i < scene->world->num_walls; i++)
+		scene->world->walls[i].texture = 1.0f;
 
 	scene->world->walls[0].position = (Vec2) {-2.0f, -2.0f};
 	scene->world->walls[0].portal = -1;
@@ -68,6 +86,26 @@ bool Scene_Reset(Scene *scene, Game *game){
 	scene->world->walls[3].portal = 1;
 	scene->world->walls[3].offset = (Vec2) {0.0f, 0.0f};
 	scene->world->walls[3].scale = (Vec2) {1.0f, 1.0f};
+
+	scene->world->walls[4].position = (Vec2) {-2.0f, 2.0f};
+	scene->world->walls[4].portal = 0;
+	scene->world->walls[4].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[4].scale = (Vec2) {1.0f, 1.0f};
+
+	scene->world->walls[5].position = (Vec2) {-2.0f, -2.0f};
+	scene->world->walls[5].portal = -1;
+	scene->world->walls[5].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[5].scale = (Vec2) {1.0f, 1.0f};
+
+	scene->world->walls[6].position = (Vec2) {-8.0f, -3.0f};
+	scene->world->walls[6].portal = -1;
+	scene->world->walls[6].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[6].scale = (Vec2) {1.0f, 1.0f};
+
+	scene->world->walls[7].position = (Vec2) {-8.0f, 3.0f};
+	scene->world->walls[7].portal = -1;
+	scene->world->walls[7].offset = (Vec2) {0.0f, 0.0f};
+	scene->world->walls[7].scale = (Vec2) {1.0f, 1.0f};
 
 	if(scene->world->mesh.vao != 0)
 		Mesh_Destroy(&scene->world->mesh);

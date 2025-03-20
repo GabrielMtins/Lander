@@ -28,6 +28,7 @@ int main(int argc, char **argv){
 
 	MegaTexture_Load(&game->resources->mega_textures[0], context, "floor.png");
 	TextureArray_Load(&game->resources->texture_array, context, "floor.png");
+	TextureArray_Load(&game->resources->texture_array, context, "wall.png");
 
 	Texture_Create(
 			&game->resources->textures[0], 

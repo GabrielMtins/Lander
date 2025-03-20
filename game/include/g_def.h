@@ -3,8 +3,8 @@
 
 #define MAX_ENTITIES 16
 
-#define INTERNAL_WIDTH 640
-#define INTERNAL_HEIGHT 360
+#define INTERNAL_WIDTH 1280
+#define INTERNAL_HEIGHT 720
 
 /* Propriedades do mundo */
 #define WORLD_WIDTH 1

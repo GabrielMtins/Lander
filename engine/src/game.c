@@ -82,14 +82,12 @@ bool Game_Loop(Game *game){
 	
 	Mat4 tmp, tmp2;
 
-	Mat4_RotateY(&tmp, time / 2.0f);
-	//Mat4_RotateY(&tmp, 3.141592 / 2);
-	//Mat4_RotateX(&tmp2, 0.2f);
-	//Mat4_Mul(&tmp, &tmp2, &tmp);
-	//Mat4_Identity(&tmp);
+	Mat4_Identity(&tmp);
 	Shader_SetUniformMat4(&shader, "model", &tmp);
 
-	Mat4_Transform(&tmp, 0.0f, 0.0f, -8.0f);
+	Mat4_Transform(&tmp, 4.0f, 2.0f, 0.0f);
+	Mat4_RotateY(&tmp2, time / 2.0f);
+	Mat4_Mul(&tmp, &tmp2, &tmp);
 	Shader_SetUniformMat4(&shader, "view", &tmp);
 
 	Mat4_PerspectiveProjection(

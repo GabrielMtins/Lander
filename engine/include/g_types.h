@@ -59,7 +59,7 @@ struct world_s {
 	WallCfg walls[MAX_WALLS];
 	size_t num_walls;
 
-	float min_height, top_height;
+	float min_height, max_height;
 
 	Mesh mesh;
 };

@@ -1,5 +1,6 @@
 #include "mat4.h"
 #include <math.h>
+#include <string.h>
 
 void Mat4_Add(Mat4 *result, const Mat4 *a, const Mat4 *b){
 	for(int i = 0; i < 16; i++){
@@ -14,6 +15,8 @@ void Mat4_Sub(Mat4 *result, const Mat4 *a, const Mat4 *b){
 }
 
 void Mat4_Mul(Mat4 *result, const Mat4 *a, const Mat4 *b){
+	float arr[16];
+
 	for(int j = 0; j < 4; j++){
 		for(int i = 0; i < 4; i++){
 			float res = 0.0f;
@@ -22,9 +25,11 @@ void Mat4_Mul(Mat4 *result, const Mat4 *a, const Mat4 *b){
 				res += a->arr[k + j * 4] * b->arr[i + 4 * k];
 			}
 
-			result->arr[i + j * 4] = res;
+			arr[i + j * 4] = res;
 		}
 	}
+
+	memcpy(result->arr, arr, 16 * sizeof(float));
 }
 
 void Mat4_MulVec3(Vec3 *result, const Mat4 *mat4, const Vec3 *vec3){
