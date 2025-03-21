@@ -2,8 +2,8 @@
 #include "box.h"
 #include "vec3.h"
 #include "builder.h"
+#include "collision.h"
 
-static int Scene_Mod(int x, int y);
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity);
 static bool Scene_HandlePhysics(Scene *scene);
 static bool Scene_HandleEntityCollision(Scene *scene);
@@ -193,32 +193,77 @@ bool Scene_RemoveEntity(Scene *scene, Entity *entity){
 	return true;
 }
 
-static int Scene_Mod(int x, int y){
-	x %= y;
-
-	return x < 0 ? x + y : x;
-}
-
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
-	//for(size_t i = 0;
+	Sector *current_sector;
+	int num_found = 0;
+	Vec3 new_position, delta_vel, normal;
+	float dt;
+
+	current_sector = &scene->world->sectors[entity->sector];
+	dt = scene->game->context->dt;
+
+	Vec3_Mul(&delta_vel, &entity->velocity, dt);
+	Vec3_Add(&new_position, &entity->position, &delta_vel);
+
+	for(size_t i = 0; i < current_sector->num_walls; i++){
+	//for(size_t i = 0; i < 1; i++){
+		const Vec2 *line_start, *line_end;
+		bool found;
+
+		line_start = &current_sector->walls[i].position;
+		line_end = &current_sector->walls[(i + 1) % current_sector->num_walls].position;
+		
+		found = Collision_CheckLineCircle(
+				new_position.x, new_position.z, entity->radius,
+				line_start, line_end
+				);
+
+		if(found){
+			num_found++;
+			normal = (Vec3) {line_end->y - line_start->y, 0.0f, line_start->x - line_end->x};
+		}
+	}
+
+	if(num_found == 0){
+		entity->position = new_position;
+	}
+	else if(num_found == 1){
+		float bad_component;
+		Vec3_Normalize(&normal, &normal);
+
+		bad_component = Vec3_Dot(&normal, &entity->velocity);
+		Vec3_Mul(&normal, &normal, bad_component);
+		Vec3_Sub(&entity->velocity, &entity->velocity, &normal);
+
+		Vec3_Mul(&delta_vel, &entity->velocity, dt);
+		Vec3_Add(&new_position, &entity->position, &delta_vel);
+
+		entity->position = new_position;
+	}
+	else{
+		entity->position.y += entity->velocity.y * dt;
+	}
+
 	return false;
 }
 
 static bool Scene_HandlePhysics(Scene *scene){
 	Entity *current;
-	Vec3 delta;
-	bool has_collision, found_collision;
+	//Vec3 delta;
 
 	for(size_t i = 0; i < scene->num_entities; i++){
-		found_collision = false;
 		current = &scene->entities[i];
 
 		if(current->removed)
 			continue;
+		
+		Scene_CheckCollisionWorld(scene, current);
 
+		/*
 		Vec3_Mul(&delta, &current->velocity, scene->game->context->dt);
 
 		Vec3_Add(&current->position, &current->position, &delta);
+		*/
 
 	}
 

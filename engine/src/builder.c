@@ -45,8 +45,6 @@ bool Builder_BuildMesh(Mesh *mesh, Mems *stack, World *world){
 		}
 	}
 
-	printf("%f %f\n", world->min_height, world->max_height);
-
 	for(size_t i = 0; i < world->num_sectors; i++){
 		Builder_BuildSector(world, i, &context);
 	}

@@ -1,5 +1,6 @@
 #include "vec2.h"
 
+#include <stdio.h>
 #include <math.h>
 
 void Vec2_Add(Vec2 *result, const Vec2 *a, const Vec2 *b){
@@ -41,4 +42,8 @@ float Vec2_Size(const Vec2 *vec){
 
 float Vec2_Dot(const Vec2 *a, const Vec2 *b){
 	return a->x * b->x + a->y * b->y;
+}
+
+void Vec2_Print(const Vec2 *a){
+	printf("%f %f\n", a->x, a->y);
 }

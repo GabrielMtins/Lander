@@ -23,4 +23,6 @@ float Vec2_Size(const Vec2 *vec);
 
 float Vec2_Dot(const Vec2 *a, const Vec2 *b);
 
+void Vec2_Print(const Vec2 *a);
+
 #endif
