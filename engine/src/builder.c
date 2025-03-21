@@ -14,6 +14,7 @@ typedef struct {
 	float bottom, top;
 } Height;
 
+static bool Builder_PrecompNormals(World *world);
 static bool Builder_BuildSector(World *world, int sector_id, BuilderContext *context);
 static bool Builder_BuildPlane(World *world, int sector_id, BuilderContext *context,  bool bottom);
 static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, const Height *start_height, const Height *end_height, BuilderContext *context);
@@ -36,14 +37,22 @@ bool Builder_BuildMesh(Mesh *mesh, Mems *stack, World *world){
 
 	for(size_t i = 0; i < world->num_sectors; i++){
 		Sector *sector = &world->sectors[i];
+		sector->inside_point = (Vec2){0.0f, 0.0f};
 
 		for(size_t j = 0; j < sector->num_walls; j++){
 			const Vec2 *position = &sector->walls[j].position;
 
+			if(j < 3)
+				Vec2_Add(&sector->inside_point, &sector->inside_point, position);
+
 			world->min_height = fminf(world->min_height, Builder_GetHeight(sector, position, true));
 			world->max_height = fmaxf(world->max_height, Builder_GetHeight(sector, position, false));
 		}
+
+		Vec2_Mul(&sector->inside_point, &sector->inside_point, 0.33f);
 	}
+
+	Builder_PrecompNormals(world);
 
 	for(size_t i = 0; i < world->num_sectors; i++){
 		Builder_BuildSector(world, i, &context);
@@ -52,6 +61,32 @@ bool Builder_BuildMesh(Mesh *mesh, Mems *stack, World *world){
 	Mesh_Create(mesh, context.vertices, context.vertices_count, context.indices, context.indices_count);
 
 	Mems_RestoreState(stack, state);
+
+	return true;
+}
+
+static bool Builder_PrecompNormals(World *world){
+	for(size_t i = 0; i < world->num_sectors; i++){
+		Sector *sector = &world->sectors[i];
+
+		for(size_t j = 0; j < sector->num_walls; j++){
+			const Vec2 *here = &sector->walls[j].position;
+			const Vec2 *next = &sector->walls[(j + 1) % sector->num_walls].position;
+			Vec2 line_diff, normal;
+
+			Vec2_Sub(&line_diff, here, next);
+
+			normal = (Vec2) {line_diff.y, -line_diff.x};
+			Vec2_Sub(&line_diff, &sector->inside_point, here);
+
+			if(Vec2_Dot(&normal, &line_diff) < 0.0f)
+				Vec2_Mul(&normal, &normal, -1.0f);
+
+			Vec2_Normalize(&normal, &normal);
+
+			sector->walls[j].normal = (Vec3) {normal.x, 0.0f, normal.y};
+		}
+	}
 
 	return true;
 }
@@ -140,7 +175,6 @@ static bool Builder_BuildPlane(World *world, int sector_id, BuilderContext *cont
 
 static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, const Height *start_height, const Height *end_height, BuilderContext *context){
 	Vec2 diff;
-	Vec3 normal;
 	float size;
 
 	if(start_height->top - start_height->bottom <= 0.0f)
@@ -151,8 +185,6 @@ static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, const Heigh
 
 	Vec2_Sub(&diff, &cfg->position, end);
 	size = Vec2_Size(&diff);
-	normal = (Vec3){-diff.y, 0.0f, diff.x};
-	Vec3_Normalize(&normal, &normal);
 
 	Vertex_CreateSimple(
 			&context->vertices[context->vertices_count],
@@ -200,7 +232,7 @@ static bool Builder_BuildWallEx(const WallCfg *cfg, const Vec2 *end, const Heigh
 
 	for(size_t i = 0; i < 4; i++){
 		context->vertices[context->vertices_count + i].color = (Vec3) {1.0f, 1.0f, 1.0f};
-		context->vertices[context->vertices_count + i].normal = normal;
+		context->vertices[context->vertices_count + i].normal = cfg->normal;
 		context->vertices[context->vertices_count + i].layer_index = cfg->texture;
 	}
 

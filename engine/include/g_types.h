@@ -31,6 +31,8 @@ typedef struct {
 	int portal;
 
 	float texture;
+
+	Vec3 normal;
 } WallCfg;
 
 typedef struct {
@@ -56,6 +58,8 @@ typedef struct {
 	bool visited;
 
 	Mesh *mesh;
+
+	Vec2 inside_point;
 } Sector;
 
 struct world_s {

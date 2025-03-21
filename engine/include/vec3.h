@@ -27,4 +27,6 @@ float Vec3_Dot(const Vec3 *a, const Vec3 *b);
 
 void Vec3_Cross(Vec3 *result, const Vec3 *a, const Vec3 *b);
 
+void Vec3_Print(const Vec3 *a);
+
 #endif

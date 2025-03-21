@@ -58,7 +58,7 @@ int main(int argc, char **argv){
 	Scene_SetHudTexture(game->main_scene, Game_GetTexture(game, 0));
 	Scene_SetHudTile(game->main_scene, 4, 4, 1);
 
-	Context_SetFps(context, 1000);
+	Context_SetFps(context, 165);
 
 	Entity *player = Scene_AddEntity(game->main_scene);
 	Player_Create(player);

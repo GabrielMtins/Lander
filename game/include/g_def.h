@@ -9,6 +9,7 @@
 #define MAX_COLLISIONS 64
 #define MAX_SECTORS (4096)
 #define MAX_WALLS (8192)
+#define MIN_STEP_HEIGHT (3.0f / 16)
 
 /* Tamanho do hud em tiles */
 #define HUD_TILE_WIDTH 8

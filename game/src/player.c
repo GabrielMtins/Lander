@@ -7,8 +7,8 @@ static void Player_Update(Scene *scene, Entity *entity, float time);
 bool Player_Create(Entity *entity){
 	Entity_Reset(entity);
 
-	entity->radius = 0.2f;
-	entity->height = 0.5f;
+	entity->radius = 0.5f;
+	entity->height = 1.0f;
 	entity->sector = 0;
 
 	entity->update = Player_Update;
@@ -18,8 +18,6 @@ bool Player_Create(Entity *entity){
 }
 
 static void Player_Update(Scene *scene, Entity *entity, float time){
-	(void) time;
-
 	const char *keys = (const char *) SDL_GetKeyboardState(NULL);
 	Context *context = scene->game->context;
 	Vec3 direction = {0.0f, 0.0f, 0.0f};
@@ -60,14 +58,15 @@ static void Player_Update(Scene *scene, Entity *entity, float time){
 
 	Mat4_RotateY(&tmp1, scene->camera.angle.y);
 
+	float old_vel = direction.y;
+	direction.y = 0.0f;
 	Vec3_Normalize(&direction, &direction);
+	direction.y = old_vel;
 	Vec3_Mul(&direction, &direction, 3.0f);
 	Mat4_MulVector(&direction, &tmp1, &direction);
 
-	//float old_vel = entity->velocity.y;
+	old_vel = entity->velocity.y;
 	entity->velocity = direction;
-	
-	/*
 	if(direction.y != 0.0f && old_vel == 0.0f){
 		(void) old_vel;
 	}
@@ -75,7 +74,6 @@ static void Player_Update(Scene *scene, Entity *entity, float time){
 		old_vel -= 10.0f * time;
 		entity->velocity.y = old_vel;
 	}
-	*/
 
 	//Vec3_Add(&entity->position, &entity->position, &direction);
 

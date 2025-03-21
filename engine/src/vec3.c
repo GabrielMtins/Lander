@@ -1,6 +1,7 @@
 #include "vec3.h"
 
 #include <math.h>
+#include <stdio.h>
 
 void Vec3_Add(Vec3 *result, const Vec3 *a, const Vec3 *b){
 	result->x = a->x + b->x;
@@ -60,4 +61,8 @@ void Vec3_Cross(Vec3 *result, const Vec3 *a, const Vec3 *b){
 		result->x = a->y * b->z - a->z * b->y;
 		result->y = a->z * b->x - a->x * b->z;
 		result->z = a->x * b->y - a->y * b->x;
+}
+
+void Vec3_Print(const Vec3 *a){
+	printf("%f %f %f\n", a->x, a->y, a->z);
 }
