@@ -7,20 +7,29 @@ static void Player_Update(Scene *scene, Entity *entity, float time);
 bool Player_Create(Entity *entity){
 	Entity_Reset(entity);
 
-	entity->radius = 0.5f;
+	entity->radius = 0.2f;
 	entity->height = 0.5f;
 	entity->sector = 0;
 
 	entity->update = Player_Update;
-	entity->position.y = -3.5f;
+	entity->position.y = -5.5f;
 
 	return true;
 }
 
 static void Player_Update(Scene *scene, Entity *entity, float time){
+	(void) time;
+
+	const char *keys = (const char *) SDL_GetKeyboardState(NULL);
 	Context *context = scene->game->context;
 	Vec3 direction = {0.0f, 0.0f, 0.0f};
 	Mat4 tmp1;
+
+	if(keys[SDL_SCANCODE_1])
+		Context_SetFps(context, 60);
+
+	if(keys[SDL_SCANCODE_2])
+		Context_SetFps(context, 165);
 
 	if(Context_GetKey(context, INPUT_LEFT))
 		direction.x += -1.0f;
@@ -38,10 +47,10 @@ static void Player_Update(Scene *scene, Entity *entity, float time){
 		direction.y += -1.0f;
 
 	if(Context_GetKey(context, INPUT_JUMP))
-		direction.y += +1.0f;
+		direction.y += 1.0f;
 
-	scene->camera.angle.y -= context->mouse_xrel * time * 0.5f;
-	scene->camera.angle.x -= context->mouse_yrel * time * 0.5f;
+	scene->camera.angle.y -= context->mouse_xrel * 0.004f;
+	scene->camera.angle.x -= context->mouse_yrel * 0.004f;
 
 	if(scene->camera.angle.x > PI / 2)
 		scene->camera.angle.x = PI / 2;
@@ -49,14 +58,28 @@ static void Player_Update(Scene *scene, Entity *entity, float time){
 	if(scene->camera.angle.x < -PI / 2)
 		scene->camera.angle.x = -PI / 2;
 
-
 	Mat4_RotateY(&tmp1, scene->camera.angle.y);
 
-	Vec3_Mul(&direction, &direction, 4.0f);
+	Vec3_Normalize(&direction, &direction);
+	Vec3_Mul(&direction, &direction, 3.0f);
 	Mat4_MulVector(&direction, &tmp1, &direction);
 
+	//float old_vel = entity->velocity.y;
 	entity->velocity = direction;
+	
+	/*
+	if(direction.y != 0.0f && old_vel == 0.0f){
+		(void) old_vel;
+	}
+	else{
+		old_vel -= 10.0f * time;
+		entity->velocity.y = old_vel;
+	}
+	*/
+
 	//Vec3_Add(&entity->position, &entity->position, &direction);
 
 	scene->camera.position = entity->position;
+
+	scene->camera.position.y += 0.5f;
 }

@@ -66,6 +66,8 @@ bool Context_SetDataFromMem(Context *context, const char *data, int size);
 
 bool Context_SetDataFromFile(Context *context, const char *filename);
 
+void Context_DelayFPS(Context *context);
+
 void Context_PollEvent(Context *context);
 
 bool Context_Destroy(Context *context);

@@ -68,6 +68,8 @@ struct world_s {
 	WallCfg walls[MAX_WALLS];
 	size_t num_walls;
 
+	int collided[MAX_COLLISIONS];
+
 	float min_height, max_height;
 
 	Mesh mesh;

@@ -28,6 +28,7 @@ int main(int argc, char **argv){
 
 	SDL_ShowCursor(0);
 	SDL_SetRelativeMouseMode(1);
+	SDL_GL_SetSwapInterval(0);
 
 	Shader_Load(
 			&game->resources->world_shader,
@@ -40,8 +41,8 @@ int main(int argc, char **argv){
 	TextureArray_Create(&game->resources->texture_array, 64, 64);
 
 	MegaTexture_Load(&game->resources->mega_textures[0], context, "floor.png");
-	TextureArray_Load(&game->resources->texture_array, context, "floor.png");
-	TextureArray_Load(&game->resources->texture_array, context, "wall.png");
+	TextureArray_Load(&game->resources->texture_array, context, "wood_floor.png");
+	TextureArray_Load(&game->resources->texture_array, context, "brick_floor.png");
 
 	Texture_Create(
 			&game->resources->textures[0], 
@@ -57,7 +58,7 @@ int main(int argc, char **argv){
 	Scene_SetHudTexture(game->main_scene, Game_GetTexture(game, 0));
 	Scene_SetHudTile(game->main_scene, 4, 4, 1);
 
-	Context_SetFps(context, 60);
+	Context_SetFps(context, 1000);
 
 	Entity *player = Scene_AddEntity(game->main_scene);
 	Player_Create(player);

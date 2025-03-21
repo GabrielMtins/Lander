@@ -4,6 +4,10 @@
 #include "builder.h"
 #include "collision.h"
 
+#include "r_json.h"
+
+static Mesh test_mesh;
+
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity);
 static bool Scene_HandlePhysics(Scene *scene);
 static bool Scene_HandleEntityCollision(Scene *scene);
@@ -12,6 +16,59 @@ static bool Scene_RenderWorld(Scene *scene);
 static bool Scene_RenderHud(Scene *scene);
 
 bool Scene_Reset(Scene *scene, Game *game){
+	{
+		const char *str = Mems_ReadFileAsString(game->context->stack, "test.json");
+		rjs_parser_t parser;
+		rjs_create_parser(&parser, malloc(1024 * 1024 * 4), 1024 * 1024 * 4);
+
+		if(rjs_parse_string(&parser, str)){
+			const rjs_object_t *obj, *ind, *v;
+			const rjs_key_t *key;
+			size_t num_vertices = 0, num_indices = 0;
+			Vertex *vertices = Mems_GetTop(game->context->stack);
+
+			obj = rjs_get_vobj(rjs_get_key(rjs_get_main_object(&parser), "Plane"));
+			v = rjs_get_vobj(rjs_get_key(obj, "vertices"));
+
+			for(key = v->start_key; rjs_isvalid(key); key = key->next){
+				vertices[num_vertices].position.x = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].position.y = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].position.z = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].uv.x = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].uv.y = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].normal.x = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].normal.y = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].normal.z = rjs_get_vnumber(key);
+				key = key->next;
+				vertices[num_vertices].layer_index = rjs_get_vnumber(key);
+
+				vertices[num_vertices].color = (Vec3){1.0f, 1.0f, 1.0f};
+				num_vertices++;
+			}
+			Mems_Alloc(game->context->stack, num_vertices * sizeof(Vertex));
+
+			unsigned int *indices = Mems_GetTop(game->context->stack);
+
+			v = rjs_get_vobj(rjs_get_key(obj, "indices"));
+
+			for(key = v->start_key; rjs_isvalid(key); key = key->next){
+				indices[num_indices] = rjs_get_vnumber(key);
+				num_indices++;
+			}
+
+			Mesh_Create(&test_mesh, vertices, num_vertices, indices, num_indices);
+		}
+	}
+
+	Mems_Free(game->context->stack);
+
 	scene->game = game;
 	scene->top_free_index = -1;
 	scene->num_entities = 0;
@@ -194,54 +251,66 @@ bool Scene_RemoveEntity(Scene *scene, Entity *entity){
 }
 
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
-	Sector *current_sector;
+	Sector *current_sector, *sectors;
 	int num_found = 0;
 	Vec3 new_position, delta_vel, normal;
+	Vec2 old_pos_2d, new_pos_2d;
 	float dt;
+	size_t collided = 1;
+	scene->world->collided[0] = entity->sector;
 
-	current_sector = &scene->world->sectors[entity->sector];
+	sectors = scene->world->sectors;
+
 	dt = scene->game->context->dt;
 
 	Vec3_Mul(&delta_vel, &entity->velocity, dt);
 	Vec3_Add(&new_position, &entity->position, &delta_vel);
 
-	for(size_t i = 0; i < current_sector->num_walls; i++){
-	//for(size_t i = 0; i < 1; i++){
-		const Vec2 *line_start, *line_end;
-		bool found;
+	new_pos_2d = (Vec2) {new_position.x, new_position.z};
+	old_pos_2d = (Vec2) {entity->position.x, entity->position.z};
 
-		line_start = &current_sector->walls[i].position;
-		line_end = &current_sector->walls[(i + 1) % current_sector->num_walls].position;
-		
-		found = Collision_CheckLineCircle(
-				new_position.x, new_position.z, entity->radius,
-				line_start, line_end
-				);
+	for(size_t sector_id = 0; sector_id < collided; sector_id++){
+		float current_bottom;
 
-		if(found){
-			num_found++;
-			normal = (Vec3) {line_end->y - line_start->y, 0.0f, line_start->x - line_end->x};
+		current_sector = &sectors[sector_id];
+		current_sector->visited = true;
+
+		current_bottom = Builder_GetHeight(current_sector, &new_pos_2d, true);
+
+		if(new_position.y < current_bottom){
+			entity->velocity.y = 0.0f;
 		}
-	}
 
-	if(num_found == 0){
-		entity->position = new_position;
-	}
-	else if(num_found == 1){
-		float bad_component;
-		Vec3_Normalize(&normal, &normal);
+		for(size_t i = 0; i < current_sector->num_walls; i++){
+			const Vec2 *line_start, *line_end;
+			bool found;
+			int portal;
 
-		bad_component = Vec3_Dot(&normal, &entity->velocity);
-		Vec3_Mul(&normal, &normal, bad_component);
-		Vec3_Sub(&entity->velocity, &entity->velocity, &normal);
+			line_start = &current_sector->walls[i].position;
+			line_end = &current_sector->walls[(i + 1) % current_sector->num_walls].position;
+		
+			found = Collision_CheckLineCircle(
+					new_position.x, new_position.z, entity->radius,
+					line_start, line_end
+					);
 
-		Vec3_Mul(&delta_vel, &entity->velocity, dt);
-		Vec3_Add(&new_position, &entity->position, &delta_vel);
+			if(!found)
+				continue;
 
-		entity->position = new_position;
-	}
-	else{
-		entity->position.y += entity->velocity.y * dt;
+			portal = current_sector->walls[i].portal;
+
+			if(portal != -1){
+				if(Collision_CheckLineLine(&old_pos_2d, &new_pos_2d, line_start, line_end)){
+					entity->sector = portal;
+					continue;
+				}
+			}
+
+			normal = (Vec3) {line_end->y - line_start->y, 0.0f, line_start->x - line_end->x};
+			Vec3_Normalize(&normal, &normal);
+
+			Vec3_Clip(&entity->velocity, &entity->velocity, &normal);
+		}
 	}
 
 	return false;
@@ -249,7 +318,7 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 
 static bool Scene_HandlePhysics(Scene *scene){
 	Entity *current;
-	//Vec3 delta;
+	Vec3 delta;
 
 	for(size_t i = 0; i < scene->num_entities; i++){
 		current = &scene->entities[i];
@@ -257,14 +326,10 @@ static bool Scene_HandlePhysics(Scene *scene){
 		if(current->removed)
 			continue;
 		
-		Scene_CheckCollisionWorld(scene, current);
+		//Scene_CheckCollisionWorld(scene, current);
 
-		/*
 		Vec3_Mul(&delta, &current->velocity, scene->game->context->dt);
-
 		Vec3_Add(&current->position, &current->position, &delta);
-		*/
-
 	}
 
 	return true;
@@ -272,51 +337,6 @@ static bool Scene_HandlePhysics(Scene *scene){
 
 static bool Scene_HandleEntityCollision(Scene *scene){
 	return true;
-	/*
-	Entity *current;
-	Entity *other;
-	Vec2 old_pos;
-
-	for(size_t i = 0; i < scene->num_entities; i++){
-		current = &scene->entities[i];
-
-		if(current->removed)
-			continue;
-
-		if(current->collision_mask == 0 && current->trigger_mask == 0)
-			continue;
-
-		for(size_t j = 0; j < scene->num_entities; j++){
-			other = &scene->entities[j];
-
-			bool is_mask = (current->collision_mask & other->collision_layer) != 0;
-			bool is_trigger = (current->trigger_mask & other->collision_layer) != 0;
-
-			if(i == j || other->removed || !(is_mask || is_trigger))
-				continue;
-
-			old_pos = current->position;
-
-			if(is_trigger && Box_CheckCollision(&current->position, &current->size, &other->position, &other->size)){
-				if(current->onTrigger != NULL)
-					current->onTrigger(scene, current, other);
-			}
-			else if(is_mask && Box_SolveCollision(&current->position, &current->size, &other->position, &other->size)){
-				bool has_collision_world = (current->collision_mask & scene->world->collision_layer) != 0;
-
-				// reverter à velha posição caso haja colisão com o mundo
-				if(Scene_CheckCollisionWorld(scene, current) && has_collision_world){
-					current->position = old_pos;
-				}
-
-				if(current->onCollision != NULL)
-					current->onCollision(scene, current, other);
-			}
-		}
-	}
-
-	return true;
-	*/
 }
 
 static bool Scene_UpdateLogic(Scene *scene){
@@ -388,7 +408,8 @@ static bool Scene_RenderWorld(Scene *scene){
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, scene->game->resources->texture_array.texture_id);
 
-	Mesh_Render(&scene->world->mesh, world_shader);
+	//Mesh_Render(&scene->world->mesh, world_shader);
+	Mesh_Render(&test_mesh, world_shader);
 
 	return true;
 }

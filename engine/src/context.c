@@ -106,11 +106,8 @@ bool Context_SetDataFromFile(Context *context, const char *filename){
 	return context->data != NULL;
 }
 
-void Context_PollEvent(Context *context){
-	SDL_Event e;
+void Context_DelayFPS(Context *context){
 	size_t new_tick;
-	context->mouse_xrel = 0;
-	context->mouse_yrel = 0;
 
 	new_tick = SDL_GetTicks();
 	context->delta_tick = (new_tick - context->tick);
@@ -119,10 +116,16 @@ void Context_PollEvent(Context *context){
 		SDL_Delay(context->min_time_frame - context->delta_tick);
 	}
 
-	context->delta_tick = context->min_time_frame;
-
+	new_tick = SDL_GetTicks();
+	context->delta_tick = (new_tick - context->tick);
 	context->dt = 0.001f * context->delta_tick;
-	context->tick = SDL_GetTicks();
+	context->tick = new_tick;
+}
+
+void Context_PollEvent(Context *context){
+	SDL_Event e;
+	context->mouse_xrel = 0;
+	context->mouse_yrel = 0;
 	
 	while(SDL_PollEvent(&e)){
 		if(e.type == SDL_QUIT)

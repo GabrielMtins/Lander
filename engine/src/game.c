@@ -72,6 +72,7 @@ bool Game_Loop(Game *game){
 	Scene_Render(game->main_scene);
 
 	Render_Present(game->context);
+	Context_DelayFPS(game->context);
 
 	return true;
 }

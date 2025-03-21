@@ -7,6 +7,7 @@ set(GAME_DIR "${PROJECT_SOURCE_DIR}/game")
 set(ENGINE_DIR "${PROJECT_SOURCE_DIR}/engine")
 
 add_subdirectory(external/glad)
+add_subdirectory(external/r_json)
 
 file(GLOB all_SRCS
 		"${ENGINE_DIR}/src/*.c"
@@ -36,6 +37,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${SDL2_MIXER_INCLUDE_DIRS}
 	include/
 	external/glad/include
+	external/r_json
 	"${GAME_DIR}/include"
 	"${ENGINE_DIR}/include"
 )
@@ -47,4 +49,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	${MATH_LIBRARY}
 	${OPENGL}
 	glad
+	r_json
 )

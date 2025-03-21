@@ -17,6 +17,8 @@ bool Vec3_Div(Vec3 *result, const Vec3 *a, float m);
 
 bool Vec3_Normalize(Vec3 *result, const Vec3 *a);
 
+void Vec3_Clip(Vec3 *result, const Vec3 *vector, const Vec3 *clip);
+
 float Vec3_SizeSqr(const Vec3 *vec);
 
 float Vec3_Size(const Vec3 *vec);

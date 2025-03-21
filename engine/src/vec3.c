@@ -35,6 +35,15 @@ bool Vec3_Normalize(Vec3 *result, const Vec3 *a){
 	return Vec3_Div(result, a, Vec3_Size(a));
 }
 
+void Vec3_Clip(Vec3 *result, const Vec3 *vector, const Vec3 *clip){
+	Vec3 proj;
+	float projection = Vec3_Dot(vector, clip);
+
+	Vec3_Mul(&proj, clip, projection);
+
+	Vec3_Sub(result, vector, &proj);
+}
+
 float Vec3_SizeSqr(const Vec3 *vec){
 	return vec->x * vec->x + vec->y * vec->y + vec->z * vec->z;
 }
