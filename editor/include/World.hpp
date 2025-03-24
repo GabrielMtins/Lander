@@ -62,6 +62,7 @@ struct World {
 	int findClosestWall(const Vec2& position);
 	bool divideWall(const Vec2& position, int wall_id);
 	bool divideWallEx(const Vec2& position, int wall_id);
+	bool divideSector(int sector_id, int position1_id, int position2_id);
 
 	/* TODO */
 	bool exportJson(const std::string& filename);

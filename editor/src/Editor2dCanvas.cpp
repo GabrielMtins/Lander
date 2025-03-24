@@ -295,6 +295,13 @@ void SelectSectorTool::handleInput(Context *context){
 
 	if(sector_id != -1 && keys[SDL_SCANCODE_SPACE]){
 		world->deleteSector(sector_id);
+		//printf("%i\n", sector_id);
+		sector_id = -1;
+	}
+
+	if(sector_id != -1 && keys[SDL_SCANCODE_LCTRL]){
+		world->divideSector(sector_id, 0, 2);
+		sector_id = -1;
 	}
 	
 	int x, y;
@@ -321,6 +328,7 @@ void SelectSectorTool::handleInput(Context *context){
 	for(const auto& [key, _] : world->sectors){
 		if(world->isPointInsideSector(position, key)){
 			sector_id = key;
+			//printf("%i\n\n", sector_id);
 			break;
 		}
 	}

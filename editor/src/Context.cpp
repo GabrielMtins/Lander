@@ -36,7 +36,8 @@ Context::Context(void){
 	mouse_surface = IMG_Load_RW(ops, 1);
 	tick = 0;
 
-	SDL_SetWindowBordered(window, SDL_TRUE);
+	SDL_SetWindowBordered(window, SDL_FALSE);
+	//SDL_SetWindowMouseGrab(window, SDL_TRUE);
 	fullscreen = false;
 }
 

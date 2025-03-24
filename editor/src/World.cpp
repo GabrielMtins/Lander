@@ -1,6 +1,7 @@
 #include "World.hpp"
 #include <cstdio>
 #include <cmath>
+#include <algorithm>
 
 Vec2::Vec2(void){
 	this->x = 0.0f;
@@ -84,6 +85,7 @@ int World::tryAddPosition(const Vec2 &position){
 	}
 
 	positions[positions_id] = position;
+	positions[positions_id].count = 1;
 
 	return positions_id++;
 }
@@ -113,7 +115,7 @@ bool World::tryAddSector(const std::vector<Vec2>& vertices){
 	Sector sector;
 
 	size_t n = vertices.size();
-	int next_sector = sectors.size();
+	int next_sector = sectors_id;
 
 	for(size_t i = 0; i < n; i++){
 		int start_wall, end_wall;
@@ -143,13 +145,17 @@ bool World::deleteSector(int id){
 	std::vector<int> to_erase;
 
 	for(auto& [index, wall] : walls){
+		//printf("Hi: ");
 		if(wall.parent_sector == id){
 			to_erase.push_back(index);
 
 			/* delete references */
 			positions[wall.start].count--;
 			positions[wall.end].count--;
+
+			//printf("%i %i", positions[wall.start].count, positions[wall.end].count);
 		}
+		//printf("\n");
 
 		if(wall.portal == id)
 			wall.portal = -1;
@@ -170,6 +176,8 @@ bool World::deleteSector(int id){
 	}
 
 	sectors.erase(id);
+
+	//printf("%lu\n\n", sectors.size());
 
 	return true;
 }
@@ -309,6 +317,59 @@ bool World::divideWallEx(const Vec2& position, int wall_id){
 			}
 		}
 	}
+
+	return true;
+}
+
+bool World::divideSector(int sector_id, int position1_id, int position2_id){
+	std::vector<int> position_indices;
+	std::vector<Vec2> sector1;
+	std::vector<Vec2> sector2;
+	size_t index_rotate;
+	bool change = false;
+
+	if(sectors.find(sector_id) == sectors.end())
+		return false;
+
+	if(positions.find(position1_id) == positions.end())
+		return false;
+
+	if(positions.find(position2_id) == positions.end())
+		return false;
+
+	{
+		const Sector& sector = sectors[sector_id];
+
+		for(const int& i : sector.wall_indices){
+			if(walls[i].start == position1_id)
+				index_rotate = position_indices.size();
+
+			position_indices.push_back(walls[i].start);
+		}
+	}
+
+	std::rotate(position_indices.begin(), position_indices.begin() + index_rotate, position_indices.end());
+
+	for(const int& i : position_indices){
+		if(i == position2_id){
+			change = true;
+		}
+		
+		if(!change){
+			sector1.push_back(positions[i]);
+		}
+		else{
+			sector2.push_back(positions[i]);
+		}
+	}
+
+	sector1.push_back(positions[position2_id]);
+	sector2.push_back(positions[position1_id]);
+
+	deleteSector(sector_id);
+	
+	tryAddSector(sector1);
+	tryAddSector(sector2);
 
 	return true;
 }
