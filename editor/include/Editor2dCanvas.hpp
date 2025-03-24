@@ -60,9 +60,28 @@ class SelectSectorTool : public Tool {
 		void render(void);
 
 	private:
-		bool isPointInsideSector(const Vec2 &position, int id);
-
 		int sector_id;
+
+		World *world;
+};
+
+class SelectWallTool : public Tool {
+	public:
+		SelectWallTool(Canvas *parent, World *world);
+		void handleInput(Context *context);
+		void render(void);
+
+	private:
+		void selectWall(Context *context);
+		void divideWall(Context *context);
+
+		enum State {
+			DIVIDE_WALL,
+			SELECT_WALL
+		};
+
+		int wall_id;
+		State state;
 
 		World *world;
 };

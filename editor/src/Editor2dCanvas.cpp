@@ -9,6 +9,7 @@ Editor2dCanvas::Editor2dCanvas(SDL_Surface *surface, World *world, OutputCanvas 
 
 	tools["add_sector"] = (Tool *) new AddSectorTool(this, world);
 	tools["select_sector"] = (Tool *) new SelectSectorTool(this, world);
+	tools["select_wall"] = (Tool *) new SelectWallTool(this, world);
 	current_tool = tools["select_sector"];
 
 	grid_per_unit = 4;
@@ -89,6 +90,10 @@ void Editor2dCanvas::handleInput(Context *context){
 				current_tool = tools["select_sector"];
 				break;
 
+			case SDL_SCANCODE_T:
+				current_tool = tools["select_wall"];
+				break;
+
 			case SDL_SCANCODE_0:
 				grid_per_unit = DEFAULT_GRID_PER_UNIT;
 				break;
@@ -119,8 +124,8 @@ void Editor2dCanvas::handleInput(Context *context){
 		}
 	}
 
-	if(grid_per_unit > 16)
-		grid_per_unit = 16;
+	if(grid_per_unit > MAX_GRID_PER_UNIT)
+		grid_per_unit = MAX_GRID_PER_UNIT;
 	if(grid_per_unit < DEFAULT_GRID_PER_UNIT)
 		grid_per_unit = DEFAULT_GRID_PER_UNIT;
 
@@ -145,7 +150,7 @@ void AddSectorTool::handleInput(Context *context){
 		state = WAITING_FOR_SECTOR;
 	}
 	
-	int x, y;
+	int x, y, index;
 	Vec2 position;
 
 	context->getMouseXY(&x, &y);
@@ -154,17 +159,27 @@ void AddSectorTool::handleInput(Context *context){
 		return;
 
 	parent->setOffset(&x, &y);
+
 	mpos_x = ((x + GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE;
 	mpos_y = ((y + GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE;
 
+	editor->gridToWorld(x, y, &position);
+	index = world->findClosestPoint(position, 0.001f);
+
+	if(index == -1){
+		editor->gridToWorld(
+				mpos_x,
+				mpos_y,
+				&position
+				);
+	}
+	else{
+		position = world->positions[index];
+		editor->worldToGrid(position, &mpos_x, &mpos_y);
+	}
+
 	if(!context->wasM1Pressed())
 		return;
-
-	editor->gridToWorld(
-			mpos_x,
-			mpos_y,
-			&position
-			);
 
 	if(positions.size() > 0 && positions[0] == position){
 		tryAddSector();
@@ -187,9 +202,10 @@ void AddSectorTool::render(void){
 		editor->fillRect(x - 1, y - 1, 3, 3);
 	}
 
-	if(state == SECTOR_CREATING){
+	//if(state == SECTOR_CREATING){
+		editor->setColor(0xff, 0xff, 0x00, 0xff);
 		editor->fillRect(mpos_x - 1, mpos_y - 1, 3, 3);
-	}
+	//}
 
 	if(positions.size() == 0)
 		return;
@@ -197,7 +213,7 @@ void AddSectorTool::render(void){
 	for(size_t i = 0; i < positions.size() - 1; i++){
 		int x1, y1, x2, y2;
 
-		editor->setColor(0x00, 0x00, 0xff, 0xff);
+		editor->setColor(0x00, 0xff, 0xff, 0xff);
 		editor->worldToGrid(positions[i], &x1, &y1);
 		editor->worldToGrid(positions[(i + 1) % positions.size()], &x2, &y2);
 		editor->drawLine(x1, y1, x2, y2);
@@ -303,7 +319,7 @@ void SelectSectorTool::handleInput(Context *context){
 	sector_id = -1;
 
 	for(const auto& [key, _] : world->sectors){
-		if(isPointInsideSector(position, key)){
+		if(world->isPointInsideSector(position, key)){
 			sector_id = key;
 			break;
 		}
@@ -333,33 +349,89 @@ void SelectSectorTool::render(void){
 	}
 }
 
-bool SelectSectorTool::isPointInsideSector(const Vec2 &position, int id){
-	Sector& sector = world->sectors[id];
+SelectWallTool::SelectWallTool(Canvas *parent, World *world) : Tool(parent){
+	this->world = world;
+	wall_id = -1;
+	state = SELECT_WALL;
+}
 
-	if(sector.wall_indices.size() < 3)
-		return false;
+void SelectWallTool::handleInput(Context *context){
+	const uint8_t *keys = SDL_GetKeyboardState(NULL);
 
-	int sign = 0;
-
-	for(const int& i : sector.wall_indices){
-		const Vec2& a = world->positions[world->walls[i].start];
-		const Vec2& b = world->positions[world->walls[i].end];
-
-		float dx1 = b.x - a.x;
-		float dy1 = b.y - a.y;
-		float dx2 = position.x - a.x;
-		float dy2 = position.y - a.y;
-
-		float cross = dx1 * dy2 - dy1 * dx2;
-
-		if (cross != 0) {
-			int currentSign = (cross > 0) ? 1 : -1;
-			if (sign == 0)
-				sign = currentSign;
-			else if (sign != currentSign)
-				return false; 
-		}
+	if(keys[SDL_SCANCODE_G] && wall_id != -1){
+		state = DIVIDE_WALL;
 	}
 
-	return true;
+	if(keys[SDL_SCANCODE_ESCAPE]){
+		wall_id = -1;
+		state = SELECT_WALL;
+	}
+
+	if(!context->wasM1Pressed())
+		return;
+
+	switch(state){
+		case DIVIDE_WALL:
+			divideWall(context);
+			break;
+
+		case SELECT_WALL:
+			selectWall(context);
+			break;
+	}
+}
+
+void SelectWallTool::render(void){
+	if(wall_id == -1)
+		return;
+
+	auto editor = (Editor2dCanvas *) parent;
+
+	const Vec2& a = world->positions[world->walls[wall_id].start];
+	const Vec2& b = world->positions[world->walls[wall_id].end];
+
+	int x1, y1, x2, y2;
+
+	editor->worldToGrid(a, &x1, &y1);
+	editor->worldToGrid(b, &x2, &y2);
+
+	editor->setColor(0x00, 0xff, 0xff, 0xff);
+	editor->drawLine(x1, y1, x2, y2);
+}
+
+void SelectWallTool::selectWall(Context *context){
+	auto editor = (Editor2dCanvas *) parent;
+	int x, y;
+	Vec2 position;
+
+	context->getMouseXY(&x, &y);
+
+	if(!parent->inBounds(x, y))
+		return;
+
+	parent->setOffset(&x, &y);
+
+	editor->gridToWorld(x, y, &position);
+
+	wall_id = world->findClosestWall(position);
+}
+
+void SelectWallTool::divideWall(Context *context){
+	auto editor = (Editor2dCanvas *) parent;
+	int x, y;
+	Vec2 position;
+
+	context->getMouseXY(&x, &y);
+
+	if(!parent->inBounds(x, y))
+		return;
+
+	parent->setOffset(&x, &y);
+
+	x = ((x + GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE;
+	y = ((y + GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE;
+
+	editor->gridToWorld(x, y, &position);
+
+	world->divideWallEx(position, wall_id);
 }

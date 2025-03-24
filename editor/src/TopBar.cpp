@@ -26,6 +26,8 @@ void TopBarCanvas::render(void){
 	
 	int x = 0;
 
+	button_width = 0;
+
 	setColor(topbar_bg_color);
 	clear();
 
@@ -49,10 +51,15 @@ void TopBarCanvas::render(void){
 
 		x += DrawUtil::ButtonSize(key);
 	}
+
+	button_width = x;
 }
 
 void TopBarCanvas::handleInput(Context *context){
 	int x, y, button;
+
+	//windowMovement(context);
+
 	if(!context->wasM1Pressed())
 		return;
 
@@ -76,5 +83,20 @@ void TopBarCanvas::handleInput(Context *context){
 			}
 			break;
 		}
+	}
+}
+
+void TopBarCanvas::windowMovement(Context *context){
+	int x, y;
+
+	context->getMouseXY(&x, &y);
+	setOffset(&x, &y);
+
+	if(context->wasM1Released()){
+		//context->grabWindow(false);
+	}
+
+	if(x > button_width && context->wasM1Pressed()){
+		//context->grabWindow(true);
 	}
 }

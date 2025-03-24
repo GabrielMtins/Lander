@@ -14,6 +14,13 @@ struct Vec2 {
 	Vec2(void);
 	Vec2(float x, float y);
 	bool operator==(const Vec2& other) const;
+	Vec2 operator+(const Vec2& other) const;
+	Vec2 operator-(const Vec2& other) const;
+	Vec2 operator*(float t) const;
+	Vec2 perpendicular(void) const;
+	Vec2 normalize(void) const;
+
+	float dot(const Vec2& other) const;
 };
 
 struct Wall {
@@ -32,6 +39,7 @@ struct Sector {
 
 	Sector(void);
 	float signedArea(World* world);
+
 };
 
 struct World {
@@ -48,6 +56,12 @@ struct World {
 	int getNextSector(void);
 	bool tryAddSector(const std::vector<Vec2>& vertices);
 	bool deleteSector(int id);
+	bool isPointInsideSector(const Vec2& position, int id);
+
+	int findClosestPoint(const Vec2& position, float radius);
+	int findClosestWall(const Vec2& position);
+	bool divideWall(const Vec2& position, int wall_id);
+	bool divideWallEx(const Vec2& position, int wall_id);
 
 	/* TODO */
 	bool exportJson(const std::string& filename);

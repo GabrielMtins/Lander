@@ -1,5 +1,6 @@
 #include "World.hpp"
 #include <cstdio>
+#include <cmath>
 
 Vec2::Vec2(void){
 	this->x = 0.0f;
@@ -13,8 +14,34 @@ Vec2::Vec2(float x, float y){
 	count = 1;
 }
 
-bool Vec2::operator==(const Vec2& other) const{
+bool Vec2::operator==(const Vec2& other) const {
 	return other.x == x && other.y == y;
+}
+
+Vec2 Vec2::operator+(const Vec2& other) const {
+	return Vec2(x + other.x, y + other.y);
+}
+
+Vec2 Vec2::operator-(const Vec2& other) const {
+	return Vec2(x - other.x, y - other.y);
+}
+
+Vec2 Vec2::operator*(float t) const {
+	return Vec2(x * t, y * t);
+}
+
+Vec2 Vec2::perpendicular(void) const {
+	return Vec2(-y, x);
+}
+
+Vec2 Vec2::normalize(void) const {
+	float size = sqrt(dot(*this));
+	 
+	return Vec2(x / size, y / size);
+}
+
+float Vec2::dot(const Vec2& other) const {
+	return x * other.x + y * other.y;
 }
 
 Wall::Wall(void){
@@ -49,10 +76,10 @@ float Sector::signedArea(World *world){
 }
 
 int World::tryAddPosition(const Vec2 &position){
-	for(auto& par : positions){
-		if(par.second == position){
-			par.second.count++;
-			return par.first;
+	for(auto& [index, value] : positions){
+		if(value == position){
+			value.count++;
+			return index;
 		}
 	}
 
@@ -115,17 +142,17 @@ bool World::deleteSector(int id){
 
 	std::vector<int> to_erase;
 
-	for(auto& par : walls){
-		if(par.second.parent_sector == id){
-			to_erase.push_back(par.first);
+	for(auto& [index, wall] : walls){
+		if(wall.parent_sector == id){
+			to_erase.push_back(index);
 
 			/* delete references */
-			positions[par.second.start].count--;
-			positions[par.second.end].count--;
+			positions[wall.start].count--;
+			positions[wall.end].count--;
 		}
 
-		if(par.second.portal == id)
-			par.second.portal = -1;
+		if(wall.portal == id)
+			wall.portal = -1;
 	}
 	
 	for(const auto& i : to_erase){
@@ -143,6 +170,145 @@ bool World::deleteSector(int id){
 	}
 
 	sectors.erase(id);
+
+	return true;
+}
+
+bool World::isPointInsideSector(const Vec2& position, int id){
+	if(sectors.find(id) == sectors.end())
+		return false;
+
+	auto& sector = sectors[id];
+
+	if(sector.wall_indices.size() < 3)
+		return false;
+
+	int sign = 0;
+
+	for(const int& i : sector.wall_indices){
+		const Vec2& a = positions[walls[i].start];
+		const Vec2& b = positions[walls[i].end];
+
+		float dx1 = b.x - a.x;
+		float dy1 = b.y - a.y;
+		float dx2 = position.x - a.x;
+		float dy2 = position.y - a.y;
+
+		float cross = dx1 * dy2 - dy1 * dx2;
+
+		if (cross != 0) {
+			int currentSign = (cross > 0) ? 1 : -1;
+			if (sign == 0)
+				sign = currentSign;
+			else if (sign != currentSign)
+				return false; 
+		}
+	}
+
+	return true;
+}
+
+int World::findClosestPoint(const Vec2& position, float radius){
+	float dx, dy;
+
+	for(const auto& [index, point] : positions){
+		dx = point.x - position.x;
+		dy = point.y - position.y;
+
+		if(dx * dx + dy * dy < radius)
+			return index;
+	}
+
+	return -1;
+}
+
+int World::findClosestWall(const Vec2& position){
+	float closest_distance = 999999.0f;
+	int found_index = -1;
+
+	for(const auto& [index, wall] : walls){
+		Vec2& a = positions[wall.start];
+		Vec2& b = positions[wall.end];
+		Vec2 diff = b - a;
+
+		if((position - a).dot(position - b) > 0){
+			continue;
+		}
+
+		float dist = fabsf((position - a).dot(diff.perpendicular().normalize()));
+
+		if(dist < closest_distance){
+			found_index = index;
+			closest_distance = dist;
+		}
+	}
+
+	return found_index;
+}
+
+bool World::divideWall(const Vec2& position, int wall_id){
+	if(walls.find(wall_id) == walls.end())
+		return false;
+
+	Wall& wall = walls[wall_id];
+	int index_new_point;
+	int new_wall;
+	int old_wall_end;
+
+	old_wall_end = wall.end;
+
+	index_new_point = tryAddPosition(position);
+
+	wall.end = index_new_point;
+
+	new_wall = tryAddWall(index_new_point, old_wall_end, wall.parent_sector);
+	walls[new_wall].portal = wall.portal;
+
+	positions[index_new_point].count++;
+
+	auto& wall_indices = sectors[wall.parent_sector].wall_indices;
+
+	for(size_t i = 0; i < wall_indices.size(); i++){
+		if(wall_indices[i] == wall_id){
+			wall_indices.insert(std::next(wall_indices.begin(), i + 1), new_wall);
+			break;
+		}
+	}
+
+	return true;
+}
+
+bool World::divideWallEx(const Vec2& position, int wall_id){
+	if(walls.find(wall_id) == walls.end())
+		return false;
+
+	Wall& wall = walls[wall_id];
+	Vec2& a = positions[wall.start];
+	Vec2& b = positions[wall.end];
+	Vec2 diff = b - a;
+	Vec2 new_point;
+	float projection;
+
+	int old_end = wall.end;
+	int old_start = wall.start;
+
+	projection = (position - a).dot(diff) / diff.dot(diff);
+
+	if(projection <= 0.0f || projection >= 1.0f)
+		return false;
+
+	new_point = diff * projection + a;
+
+	divideWall(new_point, wall_id);
+
+	if(wall.portal != -1){
+		for(const auto& [index, value] : walls){
+			if(old_start == value.end && old_end == value.start){
+				divideWall(new_point, index);
+				break;
+			}
+		}
+	}
 
 	return true;
 }

@@ -1,5 +1,6 @@
 #include "Context.hpp"
 #include "mouse.h"
+#include "EditorDef.hpp"
 
 Context::Context(void){
 	SDL_Init(SDL_INIT_VIDEO);
@@ -34,10 +35,15 @@ Context::Context(void){
 	SDL_RWops *ops = SDL_RWFromConstMem(mouse_png, mouse_png_len);
 	mouse_surface = IMG_Load_RW(ops, 1);
 	tick = 0;
+
+	SDL_SetWindowBordered(window, SDL_TRUE);
+	fullscreen = false;
 }
 
 bool Context::pollEvent(void){
 	uint32_t new_tick;
+	mouse_xrel = 0;
+	mouse_yrel = 0;
 
 	m1_pressed = false;
 	m1_released = true;
@@ -57,7 +63,10 @@ bool Context::pollEvent(void){
 				break;
 
 			case SDL_KEYDOWN:
-				keys[event.key.keysym.scancode] = true;
+				if(event.key.keysym.sym == SDLK_F11){
+					fullscreen = !fullscreen;
+					SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+				}
 				break;
 
 			case SDL_WINDOWEVENT:
@@ -71,6 +80,8 @@ bool Context::pollEvent(void){
 			case SDL_MOUSEMOTION:
 				mouse_x = (event.motion.x - (w - actual_w) / 2) * WINDOW_WIDTH / actual_w;
 				mouse_y = event.motion.y * WINDOW_HEIGHT / h;
+				mouse_xrel = event.motion.xrel;
+				mouse_yrel = event.motion.yrel;
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
@@ -80,7 +91,6 @@ bool Context::pollEvent(void){
 
 			case SDL_MOUSEBUTTONUP:
 				m1_released = event.button.button & 1;
-
 				break;
 
 		}

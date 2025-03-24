@@ -23,17 +23,22 @@ class Context {
 
 		std::unordered_map<int, bool> keys;
 		float dt;
+		bool quit;
 
 	private:
 		SDL_Window *window;
 		SDL_Event event;
 		SDL_Surface *surface;
 		SDL_Surface *mouse_surface;
-		bool quit;
+		SDL_DisplayMode dm;
+
 		int w, h, actual_w;
 		int mouse_x, mouse_y, draw_mouse_x, draw_mouse_y;
 		bool m1_pressed, m1_released;
 		uint32_t tick;
+		bool fullscreen;
+
+		int mouse_xrel, mouse_yrel;
 
 		void drawMouse(void);
 };

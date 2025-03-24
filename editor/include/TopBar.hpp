@@ -15,10 +15,12 @@ class TopBarCanvas : public Canvas {
 		std::string selected;
 
 	private:
+		void windowMovement(Context *context);
 		std::vector<std::string> keys;
 
 		SDL_Surface *surface;
 		bool update;
+		int button_width;
 
 };
 
