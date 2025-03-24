@@ -84,6 +84,7 @@ class SelectWallTool : public Tool {
 		State state;
 
 		World *world;
+		int mpos_x, mpos_y;
 };
 
 #endif
