@@ -5,6 +5,7 @@
 #include "Editor2dCanvas.hpp"
 #include "OutputCanvas.hpp"
 #include "DrawUtil.hpp"
+#include "Filebar.hpp"
 
 Game::Game(void){
 	SDL_RWops *ops = SDL_RWFromConstMem(font2_png, font2_png_len);
@@ -24,6 +25,7 @@ Game::Game(void){
 	top_bar->addButton("view");
 	
 	canvases["editor"] = new Editor2dCanvas(context->getSurface(), &world, (OutputCanvas *) output_canvas);
+	canvases["file"] = new FilebarCanvas(context->getSurface(), text_surface, &world);
 
 	active_canvas = canvases["editor"];
 
@@ -40,7 +42,11 @@ void Game::run(void){
 	while(context->pollEvent()){
 		top_bar->handleInput(context);
 		top_bar->render();
-		//output_canvas->render();
+
+		if(top_bar->update && top_bar->selected != "file"){
+			general_canvas->setColor(background_color);
+			general_canvas->fillRect(0, TOP_BAR_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT - TOP_BAR_HEIGHT);
+		}
 
 		/* draw shadow */
 		{
@@ -53,20 +59,12 @@ void Game::run(void){
 					);
 		}
 
-		//active_canvas = canvases[top_bar->selected];
+		active_canvas = canvases[top_bar->selected];
 
 		if(active_canvas != nullptr){
 			active_canvas->handleInput(context);
 			active_canvas->render();
 		}
-
-		/*
-		std::vector<std::string> keys;
-		keys.push_back("open");
-		keys.push_back("save");
-		keys.push_back("save as");
-		DrawUtil::DrawDropdownMenu(general_canvas, text_surface, keys, 0, TOP_BAR_HEIGHT, 0);
-		*/
 
 		context->updateWindow();
 	}

@@ -37,12 +37,13 @@ Context::Context(void){
 	tick = 0;
 
 	SDL_SetWindowBordered(window, SDL_FALSE);
-	//SDL_SetWindowMouseGrab(window, SDL_TRUE);
 	fullscreen = false;
 }
 
 bool Context::pollEvent(void){
 	uint32_t new_tick;
+	uint32_t delta_tick;
+	uint32_t fps = 1000 / 60;
 	mouse_xrel = 0;
 	mouse_yrel = 0;
 
@@ -53,7 +54,13 @@ bool Context::pollEvent(void){
 		key.second = false;
 
 	new_tick = SDL_GetTicks();
+	delta_tick = new_tick - tick;
 
+	if(delta_tick < fps){
+		SDL_Delay(fps - delta_tick);
+	}
+
+	new_tick = SDL_GetTicks();
 	dt = 0.001f * (new_tick - tick);
 	tick = new_tick;
 

@@ -177,7 +177,7 @@ void AddSectorTool::handleInput(Context *context){
 	parent->setOffset(&x, &y);
 
 	editor->gridToWorld(x, y, &position);
-	index = world->findClosestPoint(position, 0.8f / DEFAULT_GRID_PER_UNIT);
+	index = world->findClosestPoint(position, 0.001f);
 
 	if(index == -1){
 		editor->snapToGrid(&x, &y);

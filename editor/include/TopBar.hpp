@@ -11,6 +11,7 @@ class TopBarCanvas : public Canvas {
 		void setTexture(SDL_Surface *surface);
 		void render(void);
 		void handleInput(Context *context);
+		bool update;
 
 		std::string selected;
 
@@ -19,7 +20,6 @@ class TopBarCanvas : public Canvas {
 		std::vector<std::string> keys;
 
 		SDL_Surface *surface;
-		bool update;
 		int button_width;
 
 };

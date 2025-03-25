@@ -15,6 +15,11 @@
 #define TOP_BAR_SHADOW_WIDTH (WINDOW_WIDTH - TOP_BAR_SHADOW_X)
 #define TOP_BAR_SHADOW_HEIGHT (4)
 
+#define FILEBAR_X (0)
+#define FILEBAR_Y (TOP_BAR_HEIGHT)
+#define FILEBAR_WIDTH (WINDOW_WIDTH)
+#define FILEBAR_HEIGHT (WINDOW_HEIGHT - TOP_BAR_HEIGHT)
+
 #define ERROR_BAR_X (0)
 #define ERROR_BAR_Y (WINDOW_HEIGHT - 10)
 #define ERROR_BAR_WIDTH (WINDOW_WIDTH)
@@ -46,5 +51,7 @@ extern const SDL_Color topbar_shadow_color;
 extern const SDL_Color button_bg_color;
 extern const SDL_Color button_fg_normal_color;
 extern const SDL_Color button_fg_dark_color;
+
+extern const SDL_Color button_highlight_color;
 
 #endif
