@@ -45,19 +45,18 @@ typedef struct {
 
 		float height;
 
-		Vec2 origin;
-		Vec2 direction;
+		int wall_step;
 		float step;
 
 		float texture;
+
+		Vec3 normal;
 	} bottom, top;
 
 	bool is_static;
 	float offset_height;
 
 	bool visited;
-
-	Mesh *mesh;
 
 	Vec2 inside_point;
 } Sector;

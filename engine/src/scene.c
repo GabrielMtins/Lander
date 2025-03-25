@@ -3,6 +3,7 @@
 #include "vec3.h"
 #include "builder.h"
 #include "collision.h"
+#include "loader.h"
 
 #include "r_json.h"
 
@@ -39,10 +40,13 @@ bool Scene_Reset(Scene *scene, Game *game){
 
 	/* try */
 	/* world configs */
+	/*
 	scene->world->num_sectors = 2;
 	scene->world->num_walls = 8;
+	*/
 
 	/* sector configs */
+	/*
 	{
 		scene->world->sectors[0].bottom.offset = (Vec2){0.0f, 0.0f};
 		scene->world->sectors[0].bottom.scale = (Vec2){1.0f, 1.0f};
@@ -53,13 +57,9 @@ bool Scene_Reset(Scene *scene, Game *game){
 
 		scene->world->sectors[0].bottom.height = -6.0f;
 		scene->world->sectors[0].bottom.step = -0.0f;
-		scene->world->sectors[0].bottom.origin = (Vec2){2.0f, 2.0f};
-		scene->world->sectors[0].bottom.direction = (Vec2){1.0f, 0.0f};
 
 		scene->world->sectors[0].top.height = 2.0f;
 		scene->world->sectors[0].top.step = 0.0f;
-		scene->world->sectors[0].top.origin = (Vec2){2.0f, 2.0f};
-		scene->world->sectors[0].top.direction = (Vec2){1.0f, 0.0f};
 	}
 
 	{
@@ -70,13 +70,13 @@ bool Scene_Reset(Scene *scene, Game *game){
 		scene->world->sectors[1].num_walls = 4;
 		scene->world->sectors[1].walls = &scene->world->walls[4];
 
-		scene->world->sectors[1].bottom.height = -5.2f;
-		scene->world->sectors[1].bottom.step = 0.2f;
-		scene->world->sectors[1].bottom.origin = (Vec2){2.0f, 2.0f};
-		scene->world->sectors[1].bottom.direction = (Vec2){1.0f, 0.0f};
+		scene->world->sectors[1].bottom.height = -6.0f;
+		scene->world->sectors[1].bottom.step = -0.1f;
+		scene->world->sectors[1].bottom.wall_step = 0;
 
 		scene->world->sectors[1].top.height = -4.6f;
 		scene->world->sectors[1].top.step = 0.0f;
+		scene->world->sectors[1].top.wall_step = 3;
 	}
 
 	scene->world->walls[0].position = (Vec2) {-2.0f, -2.0f};
@@ -122,11 +122,16 @@ bool Scene_Reset(Scene *scene, Game *game){
 	for(size_t i = 0; i < scene->world->num_walls; i++){
 		scene->world->walls[i].texture = 1.0f;
 	}
+	*/
+
+	Loader_LoadWorld(scene->world, "editor/test.map");
+	//printf("%lu\n", scene->
 
 	if(scene->world->mesh.vao != 0)
 		Mesh_Destroy(&scene->world->mesh);
 
 	Builder_BuildMesh(&scene->world->mesh, scene->game->context->stack, scene->world);
+
 
 	return true;
 }
@@ -203,7 +208,7 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 	int num_found = 0;
 	Vec3 new_position, delta_vel;
 	const Vec3 *normal;
-	Vec2 old_pos_2d, new_pos_2d;
+	Vec2 new_pos_2d;
 	float dt;
 	size_t collided = 1;
 	scene->world->collided[0] = entity->sector;
@@ -216,7 +221,6 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 	Vec3_Add(&new_position, &entity->position, &delta_vel);
 
 	new_pos_2d = (Vec2) {new_position.x, new_position.z};
-	old_pos_2d = (Vec2) {entity->position.x, entity->position.z};
 
 	for(size_t sector_id = 0; sector_id < collided; sector_id++){
 		num_found = 0;
@@ -260,7 +264,6 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 			if(!found)
 				continue;
 
-
 			if(portal != -1){
 				if(!sectors[portal].visited){
 					scene->world->collided[collided++] = portal;
@@ -285,7 +288,14 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 		}
 
 		if(num_found == 1){
-			Vec3_Clip(&entity->velocity, &entity->velocity, normal);
+			if(fabsf(Vec3_Dot(&entity->velocity, normal)) < 0.1f){
+				Vec3 step;
+
+				Vec3_Mul(&step, normal, dt * 100.0f);
+				Vec3_Add(&entity->velocity, &entity->velocity, &step);
+			}
+			else
+				Vec3_Clip(&entity->velocity, &entity->velocity, normal);
 		}
 		else if(num_found > 1){
 			entity->velocity.x = 0.0f;

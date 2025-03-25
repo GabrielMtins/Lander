@@ -88,23 +88,91 @@ static bool Builder_PrecompNormals(World *world){
 		}
 	}
 
+	for(size_t i = 0; i < world->num_sectors; i++){
+		Sector *sector = &world->sectors[i];
+
+		const Vec2 *a1, *a2, *a3;
+		float h1, h2, h3;
+		Vec3 diff1, diff2, normal;
+
+		a1 = &sector->walls[0].position;
+		a2 = &sector->walls[1].position;
+		a3 = &sector->walls[2].position;
+		
+		{
+			h1 = Builder_GetHeight(sector, a1, true);
+			h2 = Builder_GetHeight(sector, a2, true);
+			h3 = Builder_GetHeight(sector, a3, true);
+
+			diff1 = (Vec3) {
+				a2->x - a1->x,
+				h2 - h1,
+				a2->y - a1->y
+			};
+
+			diff2 = (Vec3) {
+				a3->x - a1->x,
+				h3 - h1,
+				a3->y - a1->y
+			};
+
+			Vec3_Cross(&normal, &diff1, &diff2);
+
+			if(normal.y < 0.0f)
+				Vec3_Mul(&normal, &normal, -1.0f);
+
+			Vec3_Normalize(&sector->bottom.normal, &normal);
+		}
+		
+		{
+			h1 = Builder_GetHeight(sector, a1, false);
+			h2 = Builder_GetHeight(sector, a2, false);
+			h3 = Builder_GetHeight(sector, a3, false);
+
+			diff1 = (Vec3) {
+				a2->x - a1->x,
+				h2 - h1,
+				a2->y - a1->y
+			};
+
+			diff2 = (Vec3) {
+				a3->x - a1->x,
+				h3 - h1,
+				a3->y - a1->y
+			};
+
+			Vec3_Cross(&normal, &diff1, &diff2);
+
+			if(normal.y > 0.0f)
+				Vec3_Mul(&normal, &normal, -1.0f);
+
+			Vec3_Normalize(&sector->top.normal, &normal);
+		}
+	}
+
 	return true;
 }
 
 float Builder_GetHeight(const Sector *sector, const Vec2 *position, bool bottom){
-	const Vec2 *origin, *direction;
-	Vec2 diff;
+	const Vec2 *a, *b;
+	Vec2 diff, normal;
 	float step, projection, height;
 
 	if(bottom){
-		origin = &sector->bottom.origin;
-		direction = &sector->bottom.direction;
+		if(sector->bottom.wall_step == -1)
+			return sector->bottom.height;
+
+		a = &sector->walls[(sector->bottom.wall_step)].position;
+		b = &sector->walls[(sector->bottom.wall_step + 1) % sector->num_walls].position;
 		step = sector->bottom.step;
 		height = sector->bottom.height;
 	}
 	else{
-		origin = &sector->top.origin;
-		direction = &sector->top.direction;
+		if(sector->top.wall_step == -1)
+			return sector->top.height;
+
+		a = &sector->walls[(sector->top.wall_step)].position;
+		b = &sector->walls[(sector->top.wall_step + 1) % sector->num_walls].position;
 		step = sector->top.step;
 		height = sector->top.height;
 	}
@@ -112,8 +180,12 @@ float Builder_GetHeight(const Sector *sector, const Vec2 *position, bool bottom)
 	if(step == 0.0f)
 		return height;
 
-	Vec2_Sub(&diff, position, origin);
-	projection = Vec2_Dot(&diff, direction);
+	Vec2_Sub(&diff, b, a);
+	normal = (Vec2) {-diff.y, diff.x};
+	Vec2_Normalize(&normal, &normal);
+	Vec2_Sub(&diff, position, a);
+
+	projection = fabsf(Vec2_Dot(&diff, &normal));
 
 	return projection * step + height;
 }
@@ -138,22 +210,29 @@ static bool Builder_BuildPlane(World *world, int sector_id, BuilderContext *cont
 
 	sector = &world->sectors[sector_id];
 
+	if(bottom && sector->bottom.texture < 0.0f)
+		return false;
+
+	if(!bottom && sector->top.texture < 0.0f)
+		return false;
+
 	for(size_t i = 0; i < sector->num_walls; i++){
 		const Vec2 *position = &sector->walls[i].position;
 		Vertex *vertex = &context->vertices[context->vertices_count + i];
 
 		vertex->position = (Vec3){position->x, sector->top.height, position->y};
 		vertex->uv = *position;
-		vertex->normal = (Vec3){0.0f, 1.0f, 0.0f};
 		vertex->layer_index = sector->bottom.texture;
 		vertex->color = (Vec3) {0.0f, 1.0f, 0.0f};
 
 		if(bottom){
+			vertex->normal = sector->bottom.normal;
 			vertex->position.y = Builder_GetHeight(sector, position, true);
 			vertex->uv.x = vertex->uv.x * sector->bottom.scale.x + sector->bottom.offset.x;
 			vertex->uv.y = vertex->uv.y * sector->bottom.scale.y + sector->bottom.offset.y;
 		}
 		else{
+			vertex->normal = sector->top.normal;
 			vertex->position.y = Builder_GetHeight(sector, position, false);
 			vertex->uv.x = vertex->uv.x * sector->top.scale.x + sector->top.offset.x;
 			vertex->uv.y = vertex->uv.y * sector->top.scale.y + sector->top.offset.y;

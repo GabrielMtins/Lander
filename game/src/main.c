@@ -28,7 +28,7 @@ int main(int argc, char **argv){
 
 	SDL_ShowCursor(0);
 	SDL_SetRelativeMouseMode(1);
-	SDL_GL_SetSwapInterval(0);
+	SDL_GL_SetSwapInterval(1);
 
 	Shader_Load(
 			&game->resources->world_shader,
@@ -68,7 +68,6 @@ int main(int argc, char **argv){
 	Context_Destroy(context);
 	free(memory.block);
 
-	printf("%lu\n", memory.top);
 
 	return 0;
 }
