@@ -52,7 +52,7 @@ Wall::Wall(void){
 	end = 0;
 	portal = -1;
 	scale = Vec2(1.0f, 1.0f);
-	texture = 0;
+	texture = 1;
 }
 
 Wall::Wall(int start, int end){
@@ -60,7 +60,7 @@ Wall::Wall(int start, int end){
 	this->end = end;
 	portal = -1;
 	scale = Vec2(1.0f, 1.0f);
-	texture = 0;
+	texture = 1;
 }
 
 Sector::Sector(void){
@@ -68,11 +68,13 @@ Sector::Sector(void){
 	bottom.texture = 0;
 	bottom.step = 0.0f;
 	bottom.scale = Vec2(1.0f, 1.0f);
+	bottom.wall_step = 0;
 
-	top.height = 0.0f;
+	top.height = 1.0f;
 	top.texture = 0;
 	top.step = 0.0f;
 	top.scale = Vec2(1.0f, 1.0f);
+	top.wall_step = 0;
 }
 
 float Sector::signedArea(World *world){

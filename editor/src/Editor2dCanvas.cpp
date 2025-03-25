@@ -12,7 +12,7 @@ Editor2dCanvas::Editor2dCanvas(SDL_Surface *surface, World *world, OutputCanvas 
 	tools["select_wall"] = (Tool *) new SelectWallTool(this, world);
 	current_tool = tools["select_sector"];
 
-	grid_per_unit = 4;
+	grid_per_unit = DEFAULT_GRID_PER_UNIT;
 }
 
 void Editor2dCanvas::render(void){
