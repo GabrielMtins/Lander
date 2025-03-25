@@ -64,6 +64,33 @@ void DrawUtil::DrawButton(Canvas *canvas, SDL_Surface *text_surface, const std::
 			);
 }
 
+void DrawUtil::DrawDropdownMenu(Canvas *canvas, SDL_Surface *text_texture, const std::vector<std::string>& text, int x, int y, int highlight){
+	int width = 0;
+	int height = 0;
+
+	(void) highlight;
+
+	for(const auto& str : text){
+		width = std::max(width, (int) (str.size() * FONT_WIDTH));
+	}
+
+	width += BUTTON_PADDING_LEFT * 2;
+	height = text.size() * FONT_HEIGHT * 2 + FONT_HEIGHT;
+
+	canvas->setColor(button_bg_color);
+	canvas->fillRect(x, y, width, height);
+
+	for(size_t i = 0; i < text.size(); i++){
+		DrawText(
+				canvas,
+				text_texture,
+				text[i],
+				BUTTON_PADDING_LEFT + x,
+				i * FONT_HEIGHT * 2 + FONT_HEIGHT + y
+				);
+	}
+}
+
 int DrawUtil::TextSize(const std::string &text){
 	return text.size() * FONT_WIDTH + FONT_WIDTH;
 }

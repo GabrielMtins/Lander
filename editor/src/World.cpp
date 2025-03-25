@@ -217,17 +217,23 @@ bool World::isPointInsideSector(const Vec2& position, int id){
 }
 
 int World::findClosestPoint(const Vec2& position, float radius){
+	float closest_distance = radius * radius;
+	float distance;
 	float dx, dy;
+	int found_index = -1;
 
 	for(const auto& [index, point] : positions){
 		dx = point.x - position.x;
 		dy = point.y - position.y;
+		distance = dx * dx + dy * dy;
 
-		if(dx * dx + dy * dy < radius)
-			return index;
+		if(distance < closest_distance){
+			closest_distance = distance;
+			found_index = index;
+		}
 	}
 
-	return -1;
+	return found_index;
 }
 
 int World::findClosestWall(const Vec2& position){
@@ -339,12 +345,27 @@ bool World::divideSector(int sector_id, int position1_id, int position2_id){
 
 	{
 		const Sector& sector = sectors[sector_id];
+		bool found_p1 = false, found_p2 = false;
+
+		if(sector.wall_indices.size() == 3)
+			return false;
+
 
 		for(const int& i : sector.wall_indices){
-			if(walls[i].start == position1_id)
+			if(walls[i].start == position1_id){
 				index_rotate = position_indices.size();
+				found_p1 = true;
+			}
+
+			if(walls[i].start == position2_id){
+				found_p2 = true;
+			}
 
 			position_indices.push_back(walls[i].start);
+		}
+
+		if(!found_p1 || !found_p2){
+			return false;
 		}
 	}
 

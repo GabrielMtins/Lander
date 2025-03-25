@@ -10,3 +10,6 @@ void Tool::handleInput(Context *context){
 
 void Tool::render(void){
 }
+
+void Tool::reset(void){
+}

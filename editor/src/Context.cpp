@@ -160,13 +160,26 @@ Context::~Context(void){
 void Context::drawMouse(void){
 	SDL_Surface *window_surface = SDL_GetWindowSurface(window);
 
-	SDL_Rect src = {0, 0, 8, 8};
-	SDL_Rect dst = {
-		draw_mouse_x * h / WINDOW_HEIGHT + (w - actual_w) / 2,
-		draw_mouse_y * h / WINDOW_HEIGHT,
-		8 * h / WINDOW_HEIGHT,
-		8 * h / WINDOW_HEIGHT
-	};
+	{
+		SDL_Rect src = {0, 8, 8, 8};
+		SDL_Rect dst = {
+			(draw_mouse_x + 4) * h / WINDOW_HEIGHT + (w - actual_w) / 2,
+			(draw_mouse_y + 6) * h / WINDOW_HEIGHT,
+			8 * h / WINDOW_HEIGHT,
+			8 * h / WINDOW_HEIGHT
+		};
+		SDL_BlitScaled(mouse_surface, &src, window_surface, &dst);
+	}
 
-	SDL_BlitScaled(mouse_surface, &src, window_surface, &dst);
+	{
+		SDL_Rect src = {0, 0, 8, 8};
+		SDL_Rect dst = {
+			draw_mouse_x * h / WINDOW_HEIGHT + (w - actual_w) / 2,
+			draw_mouse_y * h / WINDOW_HEIGHT,
+			8 * h / WINDOW_HEIGHT,
+			8 * h / WINDOW_HEIGHT
+		};
+		SDL_BlitScaled(mouse_surface, &src, window_surface, &dst);
+	}
+
 }

@@ -8,6 +8,7 @@ class Tool {
 		Tool(Canvas *parent);
 		virtual void handleInput(Context *context);
 		virtual void render(void);
+		virtual void reset(void);
 	
 	protected:
 		Canvas *parent;

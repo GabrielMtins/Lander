@@ -14,6 +14,8 @@ class Editor2dCanvas : public Canvas {
 		void handleInput(Context *context);
 		void worldToGrid(const Vec2 &position, int *x, int *y);
 		void gridToWorld(int x, int y, Vec2 *position);
+		void snapToGrid(int *x, int *y);
+		void selectTool(const std::string& tool_name);
 
 		OutputCanvas * getOutputCanvas(void);
 
@@ -35,6 +37,7 @@ class AddSectorTool : public Tool {
 		AddSectorTool(Canvas *parent, World *world);
 		void handleInput(Context *context);
 		void render(void);
+		void reset(void);
 
 	private:
 		void tryAddSector(void);
@@ -58,8 +61,22 @@ class SelectSectorTool : public Tool {
 		SelectSectorTool(Canvas *parent, World *world);
 		void handleInput(Context *context);
 		void render(void);
+		void reset(void);
 
 	private:
+		void selectSector(Context *context);
+		void divideSector(Context *context);
+
+		enum State {
+			SELECT_SECTOR = 0,
+			DIVIDE_SECTOR
+		};
+
+		State state;
+
+		int chose_point_first;
+		int mpos_x, mpos_y;
+
 		int sector_id;
 
 		World *world;
@@ -70,6 +87,7 @@ class SelectWallTool : public Tool {
 		SelectWallTool(Canvas *parent, World *world);
 		void handleInput(Context *context);
 		void render(void);
+		void reset(void);
 
 	private:
 		void selectWall(Context *context);
