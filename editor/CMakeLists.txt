@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(Editor)
 
+add_subdirectory(external/nfd)
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
@@ -22,6 +24,7 @@ pkg_search_module(SDL2 REQUIRED sdl2)
 pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
 pkg_search_module(SDL2_MIXER REQUIRED SDL2_mixer)
 pkg_search_module(SDL2_MIXER REQUIRED SDL2_mixer)
+pkg_search_module(GTK3 REQUIRED gtk+-3.0)
 
 find_library(OPENGL OpenGL)
 find_library(MATH_LIBRARY m)
@@ -31,6 +34,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	${SDL2_IMAGE_INCLUDE_DIRS}
     ${SDL2_MIXER_INCLUDE_DIRS}
 	"${PROJECT_SOURCE_DIR}/include"
+	${GTK3_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -38,5 +42,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	${SDL2_IMAGE_LIBRARIES}
     ${SDL2_MIXER_LIBRARIES}
 	${MATH_LIBRARY}
+	${GTK3_LIBRARIES}
 	${OPENGL}
+	nfd
 )

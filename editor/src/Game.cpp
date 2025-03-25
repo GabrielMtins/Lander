@@ -8,10 +8,11 @@
 #include "Filebar.hpp"
 
 Game::Game(void){
+	context = new Context();
+
 	SDL_RWops *ops = SDL_RWFromConstMem(font2_png, font2_png_len);
 	text_surface = IMG_Load_RW(ops, 1);
 
-	context = new Context();
 	active_canvas = nullptr;
 	top_bar = new TopBarCanvas(0, 0, TOP_BAR_WIDTH, TOP_BAR_HEIGHT, context->getSurface());
 	top_bar->setTexture(text_surface);
@@ -25,7 +26,7 @@ Game::Game(void){
 	top_bar->addButton("view");
 	
 	canvases["editor"] = new Editor2dCanvas(context->getSurface(), &world, (OutputCanvas *) output_canvas);
-	canvases["file"] = new FilebarCanvas(context->getSurface(), text_surface, &world);
+	canvases["file"] = new FilebarCanvas(top_bar, context->getSurface(), text_surface, &world);
 
 	active_canvas = canvases["editor"];
 

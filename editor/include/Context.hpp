@@ -5,6 +5,7 @@
 #include <SDL2/SDL_image.h>
 #include "EditorDef.hpp"
 #include <unordered_map>
+#include <string>
 
 class Context {
 	public:
@@ -12,6 +13,9 @@ class Context {
 		bool pollEvent(void);
 		void updateWindow(void);
 		void getMouseXY(int *mouse_x, int *mouse_y);
+		void setNativeWindow(void);
+		std::string openDialog(void);
+		std::string saveDialog(void);
 
 		bool wasM1Pressed(void);
 		bool wasM1Released(void);
@@ -24,6 +28,7 @@ class Context {
 		std::unordered_map<int, bool> keys;
 		float dt;
 		bool quit;
+		uint32_t tick;
 
 	private:
 		SDL_Window *window;
@@ -35,7 +40,6 @@ class Context {
 		int w, h, actual_w;
 		int mouse_x, mouse_y, draw_mouse_x, draw_mouse_y;
 		bool m1_pressed, m1_released;
-		uint32_t tick;
 		bool fullscreen;
 
 		int mouse_xrel, mouse_yrel;

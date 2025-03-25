@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
+#include <fstream>
 
 Vec2::Vec2(void){
 	this->x = 0.0f;
@@ -74,6 +75,12 @@ float Sector::signedArea(World *world){
 	}
 
 	return signed_area < 0.0f;
+}
+
+World::World(void){
+	positions_id = 0;
+	walls_id = 0;
+	sectors_id = 0;
 }
 
 int World::tryAddPosition(const Vec2 &position){
@@ -394,3 +401,62 @@ bool World::divideSector(int sector_id, int position1_id, int position2_id){
 
 	return true;
 }
+
+std::string World::exportJson(const Wall& wall){
+	std::string ret = "";
+	auto& pos = positions[wall.start];
+
+	ret += "{";
+	ret += "\"position\":";
+	ret += "[" + std::to_string(pos.x) + "," + std::to_string(pos.y) + "]";
+	ret += "}";
+
+	return ret;
+}
+
+std::string World::exportJson(const Sector& sector){
+	std::string ret = "";
+	size_t n = sector.wall_indices.size();
+	size_t counter = 0;
+
+	ret += "{\"walls\":";
+	ret += "[";
+
+	for(const auto& i : sector.wall_indices){
+		counter++;
+		ret += exportJson(walls[i]);
+		if(counter != n)
+			ret += ',';
+	}
+
+	ret += "]";
+	ret += "}";
+
+	return ret;
+}
+
+bool World::exportJson(const std::string& filename){
+	std::ofstream file(filename);
+	size_t sector_counter = 0;
+
+	if(!file.is_open())
+		return false;
+
+	file << "{\"world\":[";
+
+	for(auto& [_, sector] : sectors){
+		sector_counter++;
+		file << exportJson(sector);
+
+		if(sector_counter != sectors.size()){
+			file << ',';
+		}
+	}
+
+	file << "]}";
+
+	file.close();
+
+	return true;
+}
+

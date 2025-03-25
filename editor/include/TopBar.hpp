@@ -11,11 +11,14 @@ class TopBarCanvas : public Canvas {
 		void setTexture(SDL_Surface *surface);
 		void render(void);
 		void handleInput(Context *context);
+		void restore(void);
+
 		bool update;
 
 		std::string selected;
 
 	private:
+		std::string old_selected;
 		void windowMovement(Context *context);
 		std::vector<std::string> keys;
 

@@ -2,8 +2,11 @@
 #include "DrawUtil.hpp"
 #include "EditorDef.hpp"
 
-FilebarCanvas::FilebarCanvas(SDL_Surface *surface, SDL_Surface *text_surface, World *world) : 
+#include <nfd.h>
+
+FilebarCanvas::FilebarCanvas(TopBarCanvas *top_bar, SDL_Surface *surface, SDL_Surface *text_surface, World *world) : 
 	Canvas(FILEBAR_X, FILEBAR_Y, FILEBAR_WIDTH, FILEBAR_HEIGHT, surface){
+
 		this->text_surface = text_surface;
 		this->world = world;
 
@@ -14,6 +17,7 @@ FilebarCanvas::FilebarCanvas(SDL_Surface *surface, SDL_Surface *text_surface, Wo
 		options.emplace_back("quit");
 		highlight = 0;
 
+		this->top_bar = top_bar;
 		filename = "";
 }
 
@@ -22,40 +26,52 @@ void FilebarCanvas::handleInput(Context *context){
 
 	context->getMouseXY(&x, &y);
 
-	if(!inBounds(x, y))
+	if(!inBounds(x, y)){
 		return;
+	}
 
 	setOffset(&x, &y);
 	DrawUtil::DropdownMenuSize(options, &w, &h);
 
 	highlight = y / (h / options.size());
 
-	if(x > w || y > h)
+	if(!context->wasM1Released())
 		return;
 
-	if(!context->wasM1Pressed())
-		return;
+	if(x > w || y > h){
+		top_bar->restore();
+	}
 
 	if(highlight >= (int) options.size())
 		return;
 
 	if(options[highlight] == "new"){
-		printf("criar novo\n");
+		*world = World();
+		top_bar->restore();
+	}
+
+	if(options[highlight] == "open"){
+		/* TODO */
+		nfdchar_t *out = NULL;
+
+		if(NFD_OpenDialog(NULL, ".", &out) == NFD_OKAY){
+			printf("%s\n", out);
+			free(out);
+		}
+
+		top_bar->restore();
 	}
 
 	if(options[highlight] == "quit"){
 		context->quit = true;
 	}
+
 }
 
 void FilebarCanvas::render(void){
 	int w, h;
 
 	DrawUtil::DropdownMenuSize(options, &w, &h);
-	/*
-	setColor(topbar_shadow_color);
-	fillRect(4, 4, w, h);
-	*/
 
 	DrawUtil::DrawDropdownMenu(
 			this,

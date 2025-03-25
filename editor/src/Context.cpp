@@ -37,18 +37,19 @@ Context::Context(void){
 	tick = 0;
 
 	SDL_SetWindowBordered(window, SDL_FALSE);
+	SDL_SetWindowMouseGrab(window, SDL_FALSE);
 	fullscreen = false;
 }
 
 bool Context::pollEvent(void){
 	uint32_t new_tick;
 	uint32_t delta_tick;
-	uint32_t fps = 1000 / 60;
+	uint32_t fps = 1000 / 165;
 	mouse_xrel = 0;
 	mouse_yrel = 0;
 
 	m1_pressed = false;
-	m1_released = true;
+	m1_released = false;
 
 	for(auto &key : keys)
 		key.second = false;
@@ -137,6 +138,9 @@ void Context::updateWindow(void){
 void Context::getMouseXY(int *mouse_x, int *mouse_y){
 	*mouse_x = this->mouse_x;
 	*mouse_y = this->mouse_y;
+}
+
+void Context::setNativeWindow(void){
 }
 
 bool Context::wasM1Pressed(void){

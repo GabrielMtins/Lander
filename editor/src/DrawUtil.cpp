@@ -80,7 +80,7 @@ void DrawUtil::DrawDropdownMenu(Canvas *canvas, SDL_Surface *text_texture, const
 	canvas->fillRect(x + width - 1, y, 1, height);
 
 	for(size_t i = 0; i < text.size(); i++){
-		if(highlight == i){
+		if(highlight == (int) i){
 			canvas->setColor(button_highlight_color);
 			canvas->fillRect(
 					x + 2,

@@ -98,6 +98,10 @@ void Editor2dCanvas::handleInput(Context *context){
 		released[i] = false;
 
 		switch(i){
+			case SDL_SCANCODE_N:
+				world->exportJson("test.json");
+				break;
+
 			case SDL_SCANCODE_B:
 				selectTool("add_sector");
 				break;
@@ -452,6 +456,7 @@ void SelectSectorTool::divideSector(Context *context){
 	else{
 		world->divideSector(sector_id, chose_point_first, closest);
 		state = SELECT_SECTOR;
+		sector_id = -1;
 	}
 }
 

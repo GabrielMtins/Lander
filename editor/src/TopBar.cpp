@@ -2,9 +2,10 @@
 #include "DrawUtil.hpp"
 #include "EditorDef.hpp"
 #include "Context.hpp"
+
 #include <ctype.h>
 #include <iostream>
-
+#include <algorithm>
 #include <cstdlib>
 
 TopBarCanvas::TopBarCanvas(int x, int y, int w, int h, SDL_Surface *surface) : Canvas(x, y, w, h, surface){
@@ -58,8 +59,6 @@ void TopBarCanvas::render(void){
 void TopBarCanvas::handleInput(Context *context){
 	int x, y, button;
 
-	//windowMovement(context);
-
 	if(!context->wasM1Pressed())
 		return;
 
@@ -79,11 +78,17 @@ void TopBarCanvas::handleInput(Context *context){
 		if(x < button){
 			if(selected != key){
 				update = true;
+				old_selected = selected;
 				selected = key;
 			}
 			break;
 		}
 	}
+}
+
+void TopBarCanvas::restore(void){
+	std::swap(old_selected, selected);
+	update = true;
 }
 
 void TopBarCanvas::windowMovement(Context *context){

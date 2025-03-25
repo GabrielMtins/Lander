@@ -51,6 +51,8 @@ struct World {
 	int walls_id = 0;
 	int sectors_id = 0;
 
+	World(void);
+
 	int tryAddPosition(const Vec2 &position);
 	int tryAddWall(int start, int end, int sector);
 	int getNextSector(void);
@@ -65,7 +67,12 @@ struct World {
 	bool divideSector(int sector_id, int position1_id, int position2_id);
 
 	/* TODO */
+	std::string exportJson(const Wall& wall);
+	std::string exportJson(const Sector& sector);
 	bool exportJson(const std::string& filename);
+
+	/* TODO */
+	bool readJson(const std::string& filename);
 };
 
 #endif
