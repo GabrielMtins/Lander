@@ -29,23 +29,35 @@ struct Wall {
 	int portal;
 	int parent_sector;
 
+	Vec2 offset;
+	Vec2 scale;
+	int texture;
+
 	Wall(void);
 	Wall(int start, int end);
 };
 
 struct Sector {
-	float bottom_height, top_height;
 	std::vector<int> wall_indices;
+
+	struct {
+		float height;
+		Vec2 offset;
+		Vec2 scale;
+		int wall_step;
+		float step;
+		int texture;
+	} bottom, top;
 
 	Sector(void);
 	float signedArea(World* world);
-
 };
 
 struct World {
 	std::unordered_map<int, Sector> sectors;
 	std::unordered_map<int, Wall> walls;
 	std::unordered_map<int, Vec2> positions;
+	std::unordered_map<int, int> id_to_order;
 
 	int positions_id = 0;
 	int walls_id = 0;
@@ -66,13 +78,12 @@ struct World {
 	bool divideWallEx(const Vec2& position, int wall_id);
 	bool divideSector(int sector_id, int position1_id, int position2_id);
 
-	/* TODO */
-	std::string exportJson(const Wall& wall);
-	std::string exportJson(const Sector& sector);
-	bool exportJson(const std::string& filename);
+	std::string exportMap(const Wall& wall);
+	std::string exportMap(const Sector& sector);
+	bool exportMap(const std::string& filename);
 
 	/* TODO */
-	bool readJson(const std::string& filename);
+	bool loadMap(const std::string& filename);
 };
 
 #endif

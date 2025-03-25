@@ -35,12 +35,13 @@ void FilebarCanvas::handleInput(Context *context){
 
 	highlight = y / (h / options.size());
 
+	if((x > w || y > h) && context->wasM1Pressed()){
+		top_bar->restore();
+		return;
+	}
+
 	if(!context->wasM1Released())
 		return;
-
-	if(x > w || y > h){
-		top_bar->restore();
-	}
 
 	if(highlight >= (int) options.size())
 		return;
@@ -51,13 +52,35 @@ void FilebarCanvas::handleInput(Context *context){
 	}
 
 	if(options[highlight] == "open"){
-		/* TODO */
 		nfdchar_t *out = NULL;
 
 		if(NFD_OpenDialog(NULL, ".", &out) == NFD_OKAY){
-			printf("%s\n", out);
+			*world = World();
+			world->loadMap(out);
 			free(out);
 		}
+
+		top_bar->restore();
+	}
+
+	if(options[highlight] == "save"){
+		if(filename.size() == 0)
+			highlight++;
+		else
+			world->exportMap(filename);
+
+		top_bar->restore();
+	}
+
+	if(options[highlight] == "save as"){
+		nfdchar_t *out = NULL;
+
+		if(NFD_SaveDialog(NULL, ".", &out) == NFD_OKAY){
+			filename = out;
+			free(out);
+		}
+
+		world->exportMap(filename);
 
 		top_bar->restore();
 	}

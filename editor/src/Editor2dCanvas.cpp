@@ -99,7 +99,6 @@ void Editor2dCanvas::handleInput(Context *context){
 
 		switch(i){
 			case SDL_SCANCODE_N:
-				world->exportJson("test.json");
 				break;
 
 			case SDL_SCANCODE_B:
@@ -126,8 +125,7 @@ void Editor2dCanvas::handleInput(Context *context){
 				grid_per_unit *= 2;
 				break;
 
-			case SDL_SCANCODE_W:
-				offset.y -= 1.0f;
+			case SDL_SCANCODE_W: offset.y -= 1.0f;
 				break;
 
 			case SDL_SCANCODE_S:
@@ -558,10 +556,6 @@ void SelectWallTool::divideWall(Context *context){
 	parent->setOffset(&x, &y);
 
 	editor->snapToGrid(&x, &y);
-	/*
-	x = ((x + GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE;
-	y = ((y + GRID_SIZE / 2) / GRID_SIZE) * GRID_SIZE;
-	*/
 
 	mpos_x = x;
 	mpos_y = y;

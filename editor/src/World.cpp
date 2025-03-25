@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 
 Vec2::Vec2(void){
 	this->x = 0.0f;
@@ -50,17 +51,28 @@ Wall::Wall(void){
 	start = 0;
 	end = 0;
 	portal = -1;
+	scale = Vec2(1.0f, 1.0f);
+	texture = 0;
 }
 
 Wall::Wall(int start, int end){
 	this->start = start;
 	this->end = end;
 	portal = -1;
+	scale = Vec2(1.0f, 1.0f);
+	texture = 0;
 }
 
 Sector::Sector(void){
-	bottom_height = 0.0f;
-	top_height = 0.0f;
+	bottom.height = 0.0f;
+	bottom.texture = 0;
+	bottom.step = 0.0f;
+	bottom.scale = Vec2(1.0f, 1.0f);
+
+	top.height = 0.0f;
+	top.texture = 0;
+	top.step = 0.0f;
+	top.scale = Vec2(1.0f, 1.0f);
 }
 
 float Sector::signedArea(World *world){
@@ -152,17 +164,13 @@ bool World::deleteSector(int id){
 	std::vector<int> to_erase;
 
 	for(auto& [index, wall] : walls){
-		//printf("Hi: ");
 		if(wall.parent_sector == id){
 			to_erase.push_back(index);
 
 			/* delete references */
 			positions[wall.start].count--;
 			positions[wall.end].count--;
-
-			//printf("%i %i", positions[wall.start].count, positions[wall.end].count);
 		}
-		//printf("\n");
 
 		if(wall.portal == id)
 			wall.portal = -1;
@@ -183,8 +191,6 @@ bool World::deleteSector(int id){
 	}
 
 	sectors.erase(id);
-
-	//printf("%lu\n\n", sectors.size());
 
 	return true;
 }
@@ -402,61 +408,87 @@ bool World::divideSector(int sector_id, int position1_id, int position2_id){
 	return true;
 }
 
-std::string World::exportJson(const Wall& wall){
+std::string World::exportMap(const Wall& wall){
 	std::string ret = "";
 	auto& pos = positions[wall.start];
 
-	ret += "{";
-	ret += "\"position\":";
-	ret += "[" + std::to_string(pos.x) + "," + std::to_string(pos.y) + "]";
-	ret += "}";
+	ret += "wall ";
+	ret += std::to_string(pos.x) + " ";
+	ret += std::to_string(pos.y) + " ";
+	ret += std::to_string(wall.offset.x) + " ";
+	ret += std::to_string(wall.offset.y) + " ";
+	ret += std::to_string(wall.scale.x) + " ";
+	ret += std::to_string(wall.scale.y) + " ";
+	ret += std::to_string(wall.texture) + " ";
+	ret += std::to_string(id_to_order[wall.portal]) + "\n";
 
 	return ret;
 }
 
-std::string World::exportJson(const Sector& sector){
+std::string World::exportMap(const Sector& sector){
 	std::string ret = "";
 	size_t n = sector.wall_indices.size();
 	size_t counter = 0;
 
-	ret += "{\"walls\":";
-	ret += "[";
+	ret += "sector ";
+	ret += std::to_string(n);
+	ret += "\n";
+
+	ret += "bottom ";
+	ret += std::to_string(sector.bottom.height) + " ";
+	ret += std::to_string(sector.bottom.offset.x) + " ";
+	ret += std::to_string(sector.bottom.offset.y) + " ";
+	ret += std::to_string(sector.bottom.scale.x) + " ";
+	ret += std::to_string(sector.bottom.scale.y) + " ";
+	ret += std::to_string(sector.bottom.wall_step) + " ";
+	ret += std::to_string(sector.bottom.step) + " ";
+	ret += std::to_string(sector.bottom.texture) + " ";
+	ret += "\n";
+
+	ret += "top ";
+	ret += std::to_string(sector.top.height) + " ";
+	ret += std::to_string(sector.top.offset.x) + " ";
+	ret += std::to_string(sector.top.offset.y) + " ";
+	ret += std::to_string(sector.top.scale.x) + " ";
+	ret += std::to_string(sector.top.scale.y) + " ";
+	ret += std::to_string(sector.top.wall_step) + " ";
+	ret += std::to_string(sector.top.step) + " ";
+	ret += std::to_string(sector.top.texture) + " ";
+	ret += "\n";
 
 	for(const auto& i : sector.wall_indices){
 		counter++;
-		ret += exportJson(walls[i]);
-		if(counter != n)
-			ret += ',';
+		ret += exportMap(walls[i]);
 	}
-
-	ret += "]";
-	ret += "}";
 
 	return ret;
 }
 
-bool World::exportJson(const std::string& filename){
+bool World::exportMap(const std::string& filename){
+	id_to_order.clear();
+
 	std::ofstream file(filename);
 	size_t sector_counter = 0;
 
 	if(!file.is_open())
 		return false;
 
-	file << "{\"world\":[";
-
-	for(auto& [_, sector] : sectors){
-		sector_counter++;
-		file << exportJson(sector);
-
-		if(sector_counter != sectors.size()){
-			file << ',';
-		}
+	id_to_order[-1] = -1;
+	for(auto& [value, _] : sectors){
+		id_to_order[value] = sector_counter++;
 	}
-
-	file << "]}";
+	
+	for(auto& [_, sector] : sectors){
+		file << exportMap(sector);
+	}
 
 	file.close();
 
 	return true;
 }
 
+bool World::loadMap(const std::string& filename){
+	(void) filename;
+
+	return true;
+}
