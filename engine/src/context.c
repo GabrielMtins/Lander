@@ -34,12 +34,14 @@ Context *Context_Create(const char *title, int w, int h, Mems *memory, Mems *sta
         fprintf(stderr, "Failed to initialize GLAD\n");
 	}
 
+	SDL_SetWindowFullscreen(context->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
 	context->width = w;
 	context->height = h;
 
 	glViewport(0, 0, w, h);
 
-	SDL_RenderSetLogicalSize(context->renderer, w, h);
+	//SDL_RenderSetLogicalSize(context->renderer, w, h);
 
 	context->memory = memory;
 	context->stack = stack;

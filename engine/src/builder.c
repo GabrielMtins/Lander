@@ -74,7 +74,7 @@ static bool Builder_PrecompNormals(World *world){
 			const Vec2 *next = &sector->walls[(j + 1) % sector->num_walls].position;
 			Vec2 line_diff, normal;
 
-			Vec2_Sub(&line_diff, here, next);
+			Vec2_Sub(&line_diff, next, here);
 
 			normal = (Vec2) {line_diff.y, -line_diff.x};
 			Vec2_Sub(&line_diff, &sector->inside_point, here);

@@ -7,9 +7,9 @@ static void Player_Update(Scene *scene, Entity *entity, float time);
 bool Player_Create(Entity *entity){
 	Entity_Reset(entity);
 
-	entity->radius = 0.5f;
-	entity->height = 1.0f;
-	entity->sector = 0;
+	entity->radius = 0.25f;
+	entity->height = 0.9f;
+	entity->sector = 6;
 
 	entity->update = Player_Update;
 	entity->position.y = -5.5f;

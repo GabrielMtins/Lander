@@ -38,11 +38,11 @@ int main(int argc, char **argv){
 
 	Mems_Free(context->stack);
 
-	TextureArray_Create(&game->resources->texture_array, 64, 64);
+	TextureArray_Create(&game->resources->texture_array, 128, 128);
 
 	MegaTexture_Load(&game->resources->mega_textures[0], context, "floor.png");
-	TextureArray_Load(&game->resources->texture_array, context, "wood_floor.png");
-	TextureArray_Load(&game->resources->texture_array, context, "brick_floor.png");
+	TextureArray_Load(&game->resources->texture_array, context, "floor2.png");
+	TextureArray_Load(&game->resources->texture_array, context, "wall2.png");
 
 	Texture_Create(
 			&game->resources->textures[0], 

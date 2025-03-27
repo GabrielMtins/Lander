@@ -5,8 +5,7 @@
 #include "collision.h"
 #include "loader.h"
 
-#include "r_json.h"
-
+static bool Scene_SolveCollisionY(Scene *scene, Entity *entity);
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity);
 static bool Scene_HandlePhysics(Scene *scene);
 static bool Scene_HandleEntityCollision(Scene *scene);
@@ -203,62 +202,63 @@ bool Scene_RemoveEntity(Scene *scene, Entity *entity){
 	return true;
 }
 
+static bool Scene_SolveCollisionY(Scene *scene, Entity *entity){
+	Vec2 pos_2d = {entity->position.x, entity->position.z};
+	float current_bottom, current_top;
+	bool found = false;
+
+	current_bottom = Builder_GetHeight(&scene->world->sectors[entity->sector], &pos_2d, true);
+	current_top = Builder_GetHeight(&scene->world->sectors[entity->sector], &pos_2d, false);
+
+	if(entity->position.y < current_bottom){
+		if(entity->velocity.y < 0.0f)
+			entity->velocity.y = 0.0f;
+
+		entity->position.y = current_bottom;
+		found = true;
+	}
+
+	if(entity->position.y + entity->height > current_top){
+		entity->velocity.y = 0.0f;
+		entity->position.y = current_top - entity->height * 1.01f;
+		found = true;
+	}
+
+	return found;
+}
+
 static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 	Sector *current_sector, *sectors;
 	int num_found = 0;
-	Vec3 new_position, delta_vel;
-	const Vec3 *normal;
 	Vec2 new_pos_2d;
-	float dt;
 	size_t collided = 1;
+	Vec2 contact;
+	float current_bottom, current_top;
+	const Vec2 *line_start, *line_end;
+	bool found, solve_collision;
+	int portal;
+
 	scene->world->collided[0] = entity->sector;
 
 	sectors = scene->world->sectors;
 
-	dt = scene->game->context->dt;
-
-	Vec3_Mul(&delta_vel, &entity->velocity, dt);
-	Vec3_Add(&new_position, &entity->position, &delta_vel);
-
-	new_pos_2d = (Vec2) {new_position.x, new_position.z};
+	Scene_SolveCollisionY(scene, entity);
 
 	for(size_t sector_id = 0; sector_id < collided; sector_id++){
-		num_found = 0;
-		normal = NULL;
-		float current_bottom, current_top;
-
+		new_pos_2d = (Vec2) {entity->position.x, entity->position.z};
 		current_sector = &sectors[scene->world->collided[sector_id]];
 		current_sector->visited = true;
 
-		if(sector_id == 0){
-			current_bottom = Builder_GetHeight(current_sector, &new_pos_2d, true);
-			current_top = Builder_GetHeight(current_sector, &new_pos_2d, false);
-
-			if(new_position.y < current_bottom){
-				if(entity->velocity.y < 0.0f)
-					entity->velocity.y = 0.0f;
-
-				entity->position.y = current_bottom;
-			}
-
-			if(new_position.y + entity->height > current_top){
-				entity->velocity.y = 0.0f;
-				entity->position.y = current_top - entity->height;
-			}
-		}
-
 		for(size_t i = 0; i < current_sector->num_walls; i++){
-			const Vec2 *line_start, *line_end;
-			bool found;
-			int portal;
-
+			solve_collision = false;
 			portal = current_sector->walls[i].portal;
 			line_start = &current_sector->walls[i].position;
 			line_end = &current_sector->walls[(i + 1) % current_sector->num_walls].position;
 		
 			found = Collision_CheckLineCircle(
-					new_position.x, new_position.z, entity->radius,
-					line_start, line_end
+					entity->position.x, entity->position.z, entity->radius,
+					line_start, line_end,
+					&contact
 					);
 
 			if(!found)
@@ -276,30 +276,21 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 				current_bottom = Builder_GetHeight(&sectors[portal], &new_pos_2d, true);
 				current_top = Builder_GetHeight(&sectors[portal], &new_pos_2d, false);
 
-				if(!(new_position.y > current_bottom - MIN_STEP_HEIGHT && new_position.y + entity->height < current_top)){
-					normal = &current_sector->walls[i].normal;
+				if(!(entity->position.y > current_bottom - MIN_STEP_HEIGHT && entity->position.y + entity->height < current_top)){
 					num_found++;
+					solve_collision = true;
 				}
 			}
 			else{
-				normal = &current_sector->walls[i].normal;
 				num_found++;
+				solve_collision = true;
 			}
-		}
 
-		if(num_found == 1){
-			if(fabsf(Vec3_Dot(&entity->velocity, normal)) < 0.1f){
-				Vec3 step;
+			if(solve_collision){
+				Vec3 delta_vec = {contact.x, 0, contact.y};
 
-				Vec3_Mul(&step, normal, dt * 100.0f);
-				Vec3_Add(&entity->velocity, &entity->velocity, &step);
+				Vec3_Add(&entity->position, &entity->position, &delta_vec);
 			}
-			else
-				Vec3_Clip(&entity->velocity, &entity->velocity, normal);
-		}
-		else if(num_found > 1){
-			entity->velocity.x = 0.0f;
-			entity->velocity.z = 0.0f;
 		}
 	}
 
@@ -307,7 +298,7 @@ static bool Scene_CheckCollisionWorld(Scene *scene, Entity *entity){
 		sectors[scene->world->collided[sector_id]].visited = false;
 	}
 
-	return false;
+	return num_found > 0;
 }
 
 static bool Scene_HandlePhysics(Scene *scene){
@@ -320,16 +311,17 @@ static bool Scene_HandlePhysics(Scene *scene){
 		if(current->removed)
 			continue;
 		
-		Scene_CheckCollisionWorld(scene, current);
-
 		Vec3_Mul(&delta, &current->velocity, scene->game->context->dt);
 		Vec3_Add(&current->position, &current->position, &delta);
+
+		Scene_CheckCollisionWorld(scene, current);
 	}
 
 	return true;
 }
 
 static bool Scene_HandleEntityCollision(Scene *scene){
+	(void) scene;
 	return true;
 }
 
@@ -403,7 +395,6 @@ static bool Scene_RenderWorld(Scene *scene){
 	glBindTexture(GL_TEXTURE_2D_ARRAY, scene->game->resources->texture_array.texture_id);
 
 	Mesh_Render(&scene->world->mesh, world_shader);
-	//Mesh_Render(&test_mesh, world_shader);
 
 	return true;
 }
