@@ -3,6 +3,7 @@
 #include "TopBar.hpp"
 #include "font2.h"
 #include "Editor2dCanvas.hpp"
+#include "Editor3dCanvas.hpp"
 #include "OutputCanvas.hpp"
 #include "DrawUtil.hpp"
 #include "Filebar.hpp"
@@ -27,6 +28,7 @@ Game::Game(void){
 	
 	canvases["editor"] = new Editor2dCanvas(context->getSurface(), &world, (OutputCanvas *) output_canvas);
 	canvases["file"] = new FilebarCanvas(top_bar, context->getSurface(), text_surface, &world);
+	canvases["view"] = new Editor3dCanvas(context->getSurface(), &world);
 
 	active_canvas = canvases["editor"];
 

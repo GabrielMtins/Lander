@@ -9,7 +9,7 @@
 #include <cstdlib>
 
 TopBarCanvas::TopBarCanvas(int x, int y, int w, int h, SDL_Surface *surface) : Canvas(x, y, w, h, surface){
-	selected = "editor";
+	selected = "view";
 	update = true;
 }
 
